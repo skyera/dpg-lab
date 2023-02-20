@@ -27,6 +27,8 @@ def run_callback():
     datax = []
     datay = []
     dpg.set_value('mem', [datax, datay])
+    global mq
+    mq = multiprocessing.Queue()
     
     p2 = multiprocessing.Process(target=report_mem)
     p2.daemon = True
@@ -85,8 +87,6 @@ def main():
         x = random.random() * 100
         datax.append(i)
         datay.append(x)
-    global mq
-    mq = multiprocessing.Queue()
     dpg.create_context()
 
     with dpg.window(label='Test', tag='main_window'):
