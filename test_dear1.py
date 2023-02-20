@@ -27,14 +27,13 @@ def run_callback():
     datax = []
     datay = []
     dpg.set_value('mem', [datax, datay])
-    global mq
     mq = multiprocessing.Queue()
     
-    p2 = multiprocessing.Process(target=report_mem)
+    p2 = multiprocessing.Process(target=report_mem, args=(mq,))
     p2.daemon = True
     p2.start()
 
-    t = threading.Thread(target=monitor_mem)
+    t = threading.Thread(target=monitor_mem, args=(mq,))
     t.start()
     t.join()
     x = random.random() % 2
@@ -53,8 +52,7 @@ def get_banner():
     return ascii_banner
 
 
-def report_mem():
-    global mq
+def report_mem(mq):
     for i in range(100):
         time.sleep(0.2)
         x = random.random() * 100
@@ -64,8 +62,7 @@ def report_mem():
     print('report_mem: done')
 
 
-def monitor_mem():
-    global mq
+def monitor_mem(mq):
     global datax, datay
     while True:
         x = mq.get()
