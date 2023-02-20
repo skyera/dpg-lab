@@ -1,5 +1,6 @@
 import dearpygui.dearpygui as dpg
 from math import sin
+import pyfiglet
 import subprocess
 
 
@@ -22,12 +23,22 @@ def run_callback():
     dpg.set_value('quote_text', quote)
 
 
+def get_banner():
+    ascii_banner = pyfiglet.figlet_format('Unit Testing', width=80)
+    return ascii_banner
+
+
 dpg.create_context()
 
 with dpg.window(label='Test', tag='main_window'):
-    quote = get_quote()
-    print(quote)
-    dpg.add_text(quote, tag='quote_text')
+    with dpg.group(horizontal=True):
+        banner = get_banner()
+        print(banner)
+        dpg.add_text(banner)
+        dpg.add_separator()
+        quote = get_quote()
+        dpg.add_text(quote, tag='quote_text')
+    
     with dpg.group(horizontal=True):
         dpg.add_text("Build Type:")
         dpg.add_radio_button(label='Build', items=['Debug', 'Release'],
@@ -77,6 +88,7 @@ with dpg.window(label='Test', tag='main_window'):
 dpg.configure_item('run_status', **{"color": (0, 255, 0)})
 dpg.create_viewport(title='Test Radio', width=600, height=600)
 dpg.set_primary_window('main_window', True)
+
 dpg.setup_dearpygui()
 dpg.show_viewport()
 dpg.start_dearpygui()
