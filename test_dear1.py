@@ -1,5 +1,6 @@
 import dearpygui.dearpygui as dpg
-from math import sin
+from faker import Faker
+from mdgen import MarkdownPostProvider
 import multiprocessing
 import platform
 import pyfiglet
@@ -9,13 +10,21 @@ import threading
 import time
 
 
-
-
 def get_quote():
     result = subprocess.run(["fortune|cowsay"], shell=True, stdout=subprocess.PIPE)
     return result.stdout.decode('utf-8')
 
 
+def get_fake_markdown():
+    fake = Faker()
+    fake.add_provider(MarkdownPostProvider)
+    fake_post = fake.post(size='medium')
+    return fake_post
+
+
+def get_fake_text():
+    fake = Faker()
+    return fake.text()
 
 
 def run_callback():
@@ -45,6 +54,9 @@ def run_callback():
         text = 'Failed'
     dpg.configure_item('run_status', **{"color": color})
     dpg.set_value('run_status', text)
+    dpg.set_value('test_summary', get_fake_markdown())
+    dpg.set_value('test_xml', get_fake_text())
+    dpg.set_value('test_valgrind', get_fake_text())
 
 
 def get_banner():
@@ -54,7 +66,7 @@ def get_banner():
 
 def report_mem(mq):
     for i in range(100):
-        time.sleep(0.2)
+        time.sleep(0.1)
         x = random.random() * 100
         print(x)
         mq.put((i, x))
@@ -128,7 +140,7 @@ def main():
 
         with dpg.tab_bar():
             with dpg.tab(label='Test summary'):
-                dpg.add_text('Test Summary')
+                dpg.add_text('Test Summary', tag='test_summary')
             with dpg.tab(label='Plot'):
                 with dpg.plot(label='Memory', height=-1, width=-1):
                     dpg.add_plot_legend()
@@ -138,10 +150,10 @@ def main():
                             tag='mem')
 
             with dpg.tab(label='Test XML'):
-                dpg.add_text("This is test xml report")
+                dpg.add_text("This is test xml report", tag='test_xml')
 
             with dpg.tab(label='Valgrind log'):
-                dpg.add_text("This is valgrind log")
+                dpg.add_text("This is valgrind log", tag='test_valgrind')
 
     dpg.configure_item('run_status', **{"color": (0, 255, 0)})
     dpg.create_viewport(title='Test Radio', width=600, height=600)
