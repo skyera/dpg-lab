@@ -131,8 +131,8 @@ def main():
         
         dpg.add_separator()
         with dpg.group(horizontal=True):
-            dpg.add_drag_int(label='Repeat', min_value=0)
-            dpg.add_button(label='Run', callback=run_callback)
+            dpg.add_drag_int(label='Repeat', default_value=1, min_value=1)
+            dpg.add_button(label='Run', width=100, callback=run_callback)
             dpg.add_loading_indicator(tag='ind', show=False)
 
         dpg.add_progress_bar(label='Progress', width=-1, tag='progress')
@@ -143,9 +143,7 @@ def main():
             dpg.add_text('Success', tag='run_status')
 
         with dpg.tab_bar():
-            with dpg.tab(label='Test summary'):
-                dpg.add_text('Test Summary', tag='test_summary')
-            with dpg.tab(label='Plot'):
+            with dpg.tab(label='Memory Plot'):
                 with dpg.plot(label='Memory', height=-1, width=-1):
                     dpg.add_plot_legend()
                     dpg.add_plot_axis(dpg.mvXAxis, label='Time(seconds)')
@@ -153,6 +151,9 @@ def main():
                     dpg.add_line_series(datax, datay, label='VSS', parent='y_axis',
                             tag='mem')
 
+            with dpg.tab(label='Test summary'):
+                dpg.add_text('Test Summary', tag='test_summary')
+            
             with dpg.tab(label='Test XML'):
                 dpg.add_text("This is test xml report", tag='test_xml')
 
