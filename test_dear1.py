@@ -1,4 +1,12 @@
 import dearpygui.dearpygui as dpg
+from math import sin
+
+datax = []
+datay = []
+
+for i in range(500):
+    datax.append(i)
+    datay.append(sin(i))
 
 dpg.create_context()
 
@@ -32,6 +40,22 @@ with dpg.window(label='Test', tag='main_window'):
     with dpg.group(horizontal=True):
         dpg.add_text('Status')
         dpg.add_text('Success', tag='run_status')
+
+    with dpg.tab_bar():
+        with dpg.tab(label='Test summary'):
+            dpg.add_text('Test Summary')
+        with dpg.tab(label='Plot'):
+            with dpg.plot(label='Memory', height=-1, width=-1):
+                dpg.add_plot_legend()
+                dpg.add_plot_axis(dpg.mvXAxis, label='Time(seconds)')
+                dpg.add_plot_axis(dpg.mvYAxis, label='vss', tag='y_axis')
+                dpg.add_line_series(datax, datay, label='VSS', parent='y_axis' )
+
+        with dpg.tab(label='Test XML'):
+            dpg.add_text("This is test xml report")
+
+        with dpg.tab(label='Valgrind log'):
+            dpg.add_text("This is valgrind log")
 
 dpg.configure_item('run_status', **{"color": (0, 255, 0)})
 dpg.create_viewport(title='Test Radio', width=600, height=600)
