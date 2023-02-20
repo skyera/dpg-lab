@@ -37,6 +37,7 @@ def run_callback():
     dpg.set_value('mem', [datax, datay])
     
     p2 = multiprocessing.Process(target=report_mem)
+    p2.daemon = True
     p2.start()
 
     t = threading.Thread(target=monitor_mem)
@@ -67,6 +68,7 @@ def report_mem():
         print(x)
         mq.put((i, x))
     mq.put('done')
+    print('report_mem: done')
 
 
 def monitor_mem():
