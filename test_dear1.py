@@ -36,27 +36,12 @@ def run_callback(sender):
     dpg.set_value('mem', [[], []])
     mq = multiprocessing.Queue()
     
-    p2 = multiprocessing.Process(target=report_mem, args=(mq,))
-    p2.daemon = True
-    p2.start()
+    proc = multiprocessing.Process(target=report_mem, args=(mq,))
+    proc.daemon = True
+    proc.start()
 
-    t = threading.Thread(target=monitor_mem, args=(mq,))
-    t.start()
-    t.join()
-    x = random.random() % 2
-    if x == 0:
-        color = (0, 255, 0)
-        text = 'Sucess'
-    else:
-        color = (255, 0, 0)
-        text = 'Failed'
-    dpg.configure_item('run_status', **{"color": color})
-    dpg.set_value('run_status', text)
-    dpg.set_value('test_summary', get_fake_markdown())
-    dpg.set_value('test_xml', get_fake_text())
-    dpg.set_value('test_valgrind', get_fake_text())
-    dpg.configure_item('ind', show=False)
-    dpg.configure_item(sender, enabled=True)
+    monitor_thread = threading.Thread(target=monitor_mem, args=(mq,))
+    monitor_thread.start()
 
 
 def select_all_callback(sender):
@@ -101,6 +86,21 @@ def monitor_mem(mq):
         p += 0.1
         dpg.set_value('progress', p)
 
+    x = random.random()
+    print(x)
+    if x > 0.5 :
+        color = (0, 255, 0)
+        text = 'Sucess'
+    else:
+        color = (255, 0, 0)
+        text = 'Failed'
+    dpg.configure_item('run_status', color=color)
+    dpg.set_value('run_status', text)
+    dpg.set_value('test_summary', get_fake_markdown())
+    dpg.set_value('test_xml', get_fake_text())
+    dpg.set_value('test_valgrind', get_fake_text())
+    dpg.configure_item('ind', show=False)
+    dpg.configure_item('run_button', enabled=True)
 
 def main():
     datax = []
@@ -144,7 +144,8 @@ def main():
         dpg.add_separator()
         with dpg.group(horizontal=True):
             dpg.add_drag_int(label='Repeat', default_value=1, width=200, min_value=1)
-            dpg.add_button(label='Run', width=100, callback=run_callback)
+            dpg.add_button(label='Run', width=100, tag='run_button',
+                    callback=run_callback)
             dpg.add_loading_indicator(tag='ind', show=False)
 
         dpg.add_progress_bar(label='Progress', width=-1, tag='progress')
