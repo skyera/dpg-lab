@@ -1,16 +1,33 @@
 import dearpygui.dearpygui as dpg
 from math import sin
+import subprocess
+
 
 datax = []
 datay = []
+
+
+def get_quote():
+    result = subprocess.run(["fortune|cowsay"], shell=True, stdout=subprocess.PIPE)
+    return result.stdout.decode('utf-8')
+
 
 for i in range(500):
     datax.append(i)
     datay.append(sin(i))
 
+
+def run_callback():
+    quote = get_quote()
+    dpg.set_value('quote_text', quote)
+
+
 dpg.create_context()
 
 with dpg.window(label='Test', tag='main_window'):
+    quote = get_quote()
+    print(quote)
+    dpg.add_text(quote, tag='quote_text')
     with dpg.group(horizontal=True):
         dpg.add_text("Build Type:")
         dpg.add_radio_button(label='Build', items=['Debug', 'Release'],
@@ -34,7 +51,7 @@ with dpg.window(label='Test', tag='main_window'):
     dpg.add_separator()
     with dpg.group():
         dpg.add_drag_int(label='Repeat', min_value=0)
-        dpg.add_button(label='Run')
+        dpg.add_button(label='Run', callback=run_callback)
 
     dpg.add_separator()
     with dpg.group(horizontal=True):
