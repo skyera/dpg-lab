@@ -1,7 +1,11 @@
 import dearpygui.dearpygui as dpg
 from math import sin
+import multiprocessing
 import pyfiglet
+import random
 import subprocess
+import threading
+import time
 
 
 datax = []
@@ -13,14 +17,38 @@ def get_quote():
     return result.stdout.decode('utf-8')
 
 
-for i in range(500):
+for i in range(20):
+    x = random.random() * 100
     datax.append(i)
-    datay.append(sin(i))
+    datay.append(x)
+#     datax.append(i)
+#     datay.append(sin(i))
 
 
 def run_callback():
     quote = get_quote()
     dpg.set_value('quote_text', quote)
+    
+    global datax, datay
+    datax = []
+    datay = []
+    dpg.set_value('mem', [datax, datay])
+    
+    p2 = multiprocessing.Process(target=report_mem)
+    p2.start()
+
+    t = threading.Thread(target=monitor_mem)
+    t.start()
+    t.join()
+    x = random.random() % 2
+    if x == 0:
+        color = (0, 255, 0)
+        text = 'Sucess'
+    else:
+        color = (255, 0, 0)
+        text = 'Failed'
+    dpg.configure_item('run_status', **{"color": color})
+    dpg.set_value('run_status', text)
 
 
 def get_banner():
@@ -28,12 +56,35 @@ def get_banner():
     return ascii_banner
 
 
+mq = multiprocessing.Queue()
+
+def report_mem():
+    for i in range(100):
+        time.sleep(0.2)
+        x = random.random() * 100
+        print(x)
+        mq.put((i, x))
+    mq.put('done')
+
+
+def monitor_mem():
+    while True:
+        x = mq.get()
+        if x == 'done':
+            print('done')
+            break
+        print('recv', x)
+        datax.append(x[0])
+        datay.append(x[1])
+        print(len(datax), len(datay))
+        dpg.set_value('mem', [datax, datay])
+
+
 dpg.create_context()
 
 with dpg.window(label='Test', tag='main_window'):
     with dpg.group(horizontal=True):
         banner = get_banner()
-        print(banner)
         dpg.add_text(banner)
         dpg.add_separator()
         quote = get_quote()
@@ -77,7 +128,8 @@ with dpg.window(label='Test', tag='main_window'):
                 dpg.add_plot_legend()
                 dpg.add_plot_axis(dpg.mvXAxis, label='Time(seconds)')
                 dpg.add_plot_axis(dpg.mvYAxis, label='vss', tag='y_axis')
-                dpg.add_line_series(datax, datay, label='VSS', parent='y_axis' )
+                dpg.add_line_series(datax, datay, label='VSS', parent='y_axis',
+                        tag='mem')
 
         with dpg.tab(label='Test XML'):
             dpg.add_text("This is test xml report")
