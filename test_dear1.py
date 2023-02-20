@@ -27,15 +27,13 @@ def get_fake_text():
     return fake.text()
 
 
-def run_callback():
+def run_callback(sender):
     if platform.system() == 'Linux':
         quote = get_quote()
         dpg.set_value('quote_text', quote)
-    
-    global datax, datay
-    datax = []
-    datay = []
-    dpg.set_value('mem', [datax, datay])
+    dpg.configure_item(sender, enabled=False)
+    dpg.configure_item('ind', show=True)
+    dpg.set_value('mem', [[], []])
     mq = multiprocessing.Queue()
     
     p2 = multiprocessing.Process(target=report_mem, args=(mq,))
@@ -57,6 +55,8 @@ def run_callback():
     dpg.set_value('test_summary', get_fake_markdown())
     dpg.set_value('test_xml', get_fake_text())
     dpg.set_value('test_valgrind', get_fake_text())
+    dpg.configure_item('ind', show=False)
+    dpg.configure_item(sender, enabled=True)
 
 
 def get_banner():
@@ -68,28 +68,29 @@ def report_mem(mq):
     for i in range(100):
         time.sleep(0.1)
         x = random.random() * 100
-        print(x)
         mq.put((i, x))
     mq.put('done')
     print('report_mem: done')
 
 
 def monitor_mem(mq):
-    global datax, datay
+    datax = []
+    datay = []
+    p  = 0
+    dpg.set_value('progress', p)
     while True:
         x = mq.get()
         if x == 'done':
             print('done')
             break
-        print('recv', x)
         datax.append(x[0])
         datay.append(x[1])
-        print(len(datax), len(datay))
         dpg.set_value('mem', [datax, datay])
+        p += 0.1
+        dpg.set_value('progress', p)
 
 
 def main():
-    global datax, datay
     datax = []
     datay = []
     for i in range(20):
@@ -129,9 +130,12 @@ def main():
             dpg.add_button(label='Refresh')
         
         dpg.add_separator()
-        with dpg.group():
+        with dpg.group(horizontal=True):
             dpg.add_drag_int(label='Repeat', min_value=0)
             dpg.add_button(label='Run', callback=run_callback)
+            dpg.add_loading_indicator(tag='ind', show=False)
+
+        dpg.add_progress_bar(label='Progress', width=-1, tag='progress')
 
         dpg.add_separator()
         with dpg.group(horizontal=True):
