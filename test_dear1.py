@@ -1,6 +1,7 @@
 import dearpygui.dearpygui as dpg
 from math import sin
 import multiprocessing
+import platform
 import pyfiglet
 import random
 import subprocess
@@ -87,8 +88,10 @@ with dpg.window(label='Test', tag='main_window'):
         banner = get_banner()
         dpg.add_text(banner)
         dpg.add_separator()
-        quote = get_quote()
-        dpg.add_text(quote, tag='quote_text')
+        
+        if platform.system() == 'Linux':
+            quote = get_quote()
+            dpg.add_text(quote, tag='quote_text')
     
     with dpg.group(horizontal=True):
         dpg.add_text("Build Type:")
