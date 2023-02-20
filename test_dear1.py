@@ -27,8 +27,9 @@ for i in range(20):
 
 
 def run_callback():
-    quote = get_quote()
-    dpg.set_value('quote_text', quote)
+    if platform.system() == 'Linux':
+        quote = get_quote()
+        dpg.set_value('quote_text', quote)
     
     global datax, datay
     datax = []
