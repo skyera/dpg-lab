@@ -59,6 +59,18 @@ def run_callback(sender):
     dpg.configure_item(sender, enabled=True)
 
 
+def select_all_callback(sender):
+    ts_tags = ('t1', 't2', 't3', 't4', 't5')
+    for ts in ts_tags:
+        dpg.set_value(ts, True)
+
+
+def select_none_callback(sender):
+    ts_tags = ('t1', 't2', 't3', 't4', 't5')
+    for ts in ts_tags:
+        dpg.set_value(ts, False)
+
+
 def get_banner():
     ascii_banner = pyfiglet.figlet_format('Unit Testing', width=80)
     return ascii_banner
@@ -117,21 +129,21 @@ def main():
         dpg.add_separator()
         with dpg.group(xoffset=100):
             dpg.add_text('Test cases')
-            dpg.add_checkbox(label='case 1')
-            dpg.add_checkbox(label='case 2')
-            dpg.add_checkbox(label='case 3')
-            dpg.add_checkbox(label='case 4')
-            dpg.add_checkbox(label='case 5')
+            dpg.add_checkbox(label='case 1', tag='t1')
+            dpg.add_checkbox(label='case 2', tag='t2')
+            dpg.add_checkbox(label='case 3', tag='t3')
+            dpg.add_checkbox(label='case 4', tag='t4')
+            dpg.add_checkbox(label='case 5', tag='t5')
 
         dpg.add_separator()
         with dpg.group(horizontal=True):
-            dpg.add_button(label='Select All')
-            dpg.add_button(label='Select None')
+            dpg.add_button(label='Select All', callback=select_all_callback)
+            dpg.add_button(label='Select None', callback=select_none_callback)
             dpg.add_button(label='Refresh')
         
         dpg.add_separator()
         with dpg.group(horizontal=True):
-            dpg.add_drag_int(label='Repeat', default_value=1, min_value=1)
+            dpg.add_drag_int(label='Repeat', default_value=1, width=200, min_value=1)
             dpg.add_button(label='Run', width=100, callback=run_callback)
             dpg.add_loading_indicator(tag='ind', show=False)
 
