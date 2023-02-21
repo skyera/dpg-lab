@@ -28,9 +28,14 @@ def get_fake_text():
 
 
 def run_callback(sender):
+    if get_checked_tc_count() == 0:
+        dpg.configure_item('modal_id', show=True)
+        return
+
     if platform.system() == 'Linux':
         quote = get_quote()
         dpg.set_value('quote_text', quote)
+
     dpg.configure_item(sender, enabled=False)
     dpg.configure_item('ind', show=True)
     dpg.set_value('mem', [[], []])
@@ -42,6 +47,15 @@ def run_callback(sender):
 
     monitor_thread = threading.Thread(target=monitor_mem, args=(mq,))
     monitor_thread.start()
+
+
+def get_checked_tc_count():
+    ts_tags = ('t1', 't2', 't3', 't4', 't5')
+    count = 0
+    for ts in ts_tags:
+        if dpg.get_value(ts):
+            count += 1
+    return count
 
 
 def select_all_callback(sender):
@@ -147,6 +161,12 @@ def main():
             dpg.add_button(label='Run', width=100, tag='run_button',
                     callback=run_callback)
             dpg.add_loading_indicator(tag='ind', show=False)
+
+        with dpg.window(label='Test cases', modal=True, show=False, tag='modal_id'):
+            dpg.add_text('No test cases selected')
+            dpg.add_separator()
+            dpg.add_button(label='Close', 
+                    callback=lambda: dpg.configure_item('modal_id', show=False))
 
         dpg.add_progress_bar(label='Progress', width=-1, tag='progress')
 
