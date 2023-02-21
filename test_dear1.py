@@ -116,13 +116,19 @@ class MainWindow:
                         horizontal=True)
             
             dpg.add_separator()
-            with dpg.group(xoffset=100):
-                dpg.add_text('Test cases')
-                dpg.add_checkbox(label='case 1', tag='t1')
-                dpg.add_checkbox(label='case 2', tag='t2')
-                dpg.add_checkbox(label='case 3', tag='t3')
-                dpg.add_checkbox(label='case 4', tag='t4')
-                dpg.add_checkbox(label='case 5', tag='t5')
+            dpg.add_text('Test cases')
+            with dpg.table(header_row=False):
+                dpg.add_table_column()
+                dpg.add_table_column()
+                dpg.add_table_column()
+                with dpg.table_row():
+                    dpg.add_checkbox(label='case 1', tag='t1')
+                    dpg.add_checkbox(label='case 2', tag='t2')
+                    dpg.add_checkbox(label='case 3', tag='t3')
+                
+                with dpg.table_row():
+                    dpg.add_checkbox(label='case 4', tag='t4')
+                    dpg.add_checkbox(label='case 5', tag='t5')
 
             dpg.add_separator()
             with dpg.group(horizontal=True):
