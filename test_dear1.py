@@ -113,6 +113,10 @@ class MainWindow:
             with dpg.group():
                 dpg.add_drag_int(label='count', default_value=100, max_value=1000,tag='count')
                 dpg.add_input_float(label='interval', default_value=0.1, tag='interval')
+
+                with dpg.tooltip('interval'):
+                    dpg.add_text('sleep time')
+
             dpg.add_spacer()
 
             with dpg.group(horizontal=True):
@@ -132,7 +136,7 @@ class MainWindow:
             dpg.add_separator()
             with dpg.group(horizontal=True):
                 dpg.add_text('Status')
-                dpg.add_text('Success', tag='run_status')
+                dpg.add_text('Not started', tag='run_status')
 
             with dpg.tab_bar():
                 with dpg.tab(label='Memory Plot'):
