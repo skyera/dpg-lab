@@ -80,6 +80,7 @@ class MainWindow:
                     dpg.add_menu_item(label='implot', callback=dpg.show_implot_demo)
                     dpg.add_menu_item(label='doc', callback=dpg.show_documentation)
                     dpg.add_menu_item(label='Debug', callback=dpg.show_debug)
+                    dpg.add_menu_item(label='metrics', callback=dpg.show_metrics)
                     dpg.add_menu_item(label='About', callback=dpg.show_about)
 
             with dpg.group(horizontal=True):
