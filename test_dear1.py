@@ -72,6 +72,16 @@ class MainWindow:
             datay.append(x)
         
         with dpg.window(label='Unit Test', tag='main_window'):
+            with dpg.menu_bar():
+                with dpg.menu(label='File'):
+                    dpg.add_menu_item(label='demo', callback=demo.show_demo)
+                    dpg.add_menu_item(label='registry', callback=dpg.show_item_registry)
+                    dpg.add_menu_item(label='tool', callback=dpg.show_tool)
+                    dpg.add_menu_item(label='implot', callback=dpg.show_implot_demo)
+                    dpg.add_menu_item(label='doc', callback=dpg.show_documentation)
+                    dpg.add_menu_item(label='Debug', callback=dpg.show_debug)
+                    dpg.add_menu_item(label='About', callback=dpg.show_about)
+
             with dpg.group(horizontal=True):
                 banner = get_banner()
                 dpg.add_text(banner)
@@ -93,7 +103,7 @@ class MainWindow:
                 dpg.add_table_column()
                 dpg.add_table_column()
                 with dpg.table_row():
-                    dpg.add_checkbox(label='case 1', tag='t1')
+                    dpg.add_checkbox(label='case 1', tag='t1', default_value=True)
                     dpg.add_checkbox(label='case 2', tag='t2')
                     dpg.add_checkbox(label='case 3', tag='t3')
                 
@@ -105,7 +115,6 @@ class MainWindow:
             with dpg.group(horizontal=True):
                 dpg.add_button(label='Select All', callback=self.select_all_callback)
                 dpg.add_button(label='Select None', callback=self.select_none_callback)
-                dpg.add_button(label='demo', callback=demo.show_demo)
                 dpg.add_button(label='registery', callback=dpg.show_item_registry)
             
             dpg.add_separator()
