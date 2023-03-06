@@ -1,15 +1,16 @@
-import dearpygui.dearpygui as dpg
-import dearpygui.demo as demo
-from faker import Faker
-from mdgen import MarkdownPostProvider
 import multiprocessing
 import platform
-import psutil
-import pyfiglet
 import random
 import subprocess
 import threading
 import time
+
+import dearpygui.dearpygui as dpg
+import dearpygui.demo as demo
+import psutil
+import pyfiglet
+from faker import Faker
+from mdgen import MarkdownPostProvider
 
 
 def get_quote():
