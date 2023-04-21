@@ -65,6 +65,10 @@ class MainWindow:
         self.queue = multiprocessing.Queue()
 
     def create(self):
+        self.create_mainwindow()
+        self.create_file_window()
+
+    def create_mainwindow(self):
         datax = []
         datay = []
         for i in range(20):
@@ -100,19 +104,24 @@ class MainWindow:
                 )
 
             dpg.add_separator()
-            dpg.add_text("Test cases")
-            with dpg.table(header_row=False):
-                dpg.add_table_column()
-                dpg.add_table_column()
-                dpg.add_table_column()
-                with dpg.table_row():
-                    dpg.add_checkbox(label="case 1", tag="t1", default_value=True)
-                    dpg.add_checkbox(label="case 2", tag="t2")
-                    dpg.add_checkbox(label="case 3", tag="t3")
+            with dpg.child_window(height=200):
+                dpg.add_text("Test cases")
+                with dpg.table(header_row=False):
+                    dpg.add_table_column()
+                    dpg.add_table_column()
+                    dpg.add_table_column()
+                    with dpg.table_row():
+                        dpg.add_checkbox(label="case 1", tag="t1", default_value=True)
+                        dpg.add_checkbox(label="case 2", tag="t2")
+                        dpg.add_checkbox(label="case 3", tag="t3")
 
-                with dpg.table_row():
-                    dpg.add_checkbox(label="case 4", tag="t4")
-                    dpg.add_checkbox(label="case 5", tag="t5")
+                    with dpg.table_row():
+                        dpg.add_checkbox(label="case 4", tag="t4")
+                        dpg.add_checkbox(label="case 5", tag="t5")
+
+                    for i in range(30):
+                        with dpg.table_row():
+                            dpg.add_checkbox(label=f"case {i+6}")
 
             dpg.add_separator()
             with dpg.group(horizontal=True):
@@ -141,6 +150,7 @@ class MainWindow:
                     label="Run", width=100, tag="run_button", callback=self.run_callback
                 )
                 dpg.add_loading_indicator(tag="ind", show=False)
+                dpg.add_button(label="browse...", callback=self.browse_callback)
 
             with dpg.window(label="Test cases", modal=True, show=False, tag="modal_id"):
                 dpg.add_text("No test cases selected")
@@ -256,6 +266,22 @@ class MainWindow:
         dpg.configure_item("run_status", color=color)
         dpg.set_value("run_status", text)
 
+    def create_file_window(self):
+        with dpg.file_dialog(
+            directory_selector=False,
+            tag="file_window",
+            show=False,
+            callback=self.file_callback,
+        ):
+            dpg.add_file_extension("*.cpp", color=(255, 255, 0, 255))
+            dpg.add_file_extension("*.h", color=(255, 0, 255, 255))
+
+    def browse_callback(self):
+        dpg.show_item("file_window")
+
+    def file_callback(self, app_data):
+        print(app_data)
+
 
 class App:
     def __init__(self):
@@ -265,7 +291,7 @@ class App:
     def run(self):
         self.main_window.create()
         dpg.configure_item("run_status", **{"color": (0, 255, 0)})
-        dpg.create_viewport(title="Test Radio", width=600, height=600)
+        dpg.create_viewport(title="Test Radio", width=600, height=800)
         dpg.set_primary_window("main_window", True)
 
         dpg.setup_dearpygui()
