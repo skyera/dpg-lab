@@ -291,7 +291,7 @@ class App:
     def run(self):
         self.main_window.create()
         dpg.configure_item("run_status", **{"color": (0, 255, 0)})
-        dpg.create_viewport(title="Test Radio", width=600, height=800)
+        dpg.create_viewport(title="Test Radio", width=700, height=800)
         dpg.set_primary_window("main_window", True)
 
         dpg.setup_dearpygui()
