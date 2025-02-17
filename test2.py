@@ -5,19 +5,8 @@ import numpy as np
 from PIL import Image
 
 
-def calculate_histogram(img):
-    img_data = np.array(img)
-    r, g, b = (
-        img_data[:, :, 0],
-        img_data[:, :, 1],
-        img_data[:, :, 2],
-    )
-
-    hist_r = np.histogram(r, bins=256, range=(0, 256))[0]
-    hist_g = np.histogram(g, bins=256, range=(0, 256))[0]
-    hist_b = np.histogram(b, bins=256, range=(0, 256))[0]
-
-    return hist_r, hist_g, hist_b
+def normalize(hist):
+    return hist / hist.max() if hist.max() != 0 else hist
 
 
 dpg.create_context()
@@ -38,7 +27,6 @@ def open_callback(sender, app_dat, user_data):
         img = img.convert("RGB")
     width, height = img.size
     width, height, channels, data = dpg.load_image(file_path)
-    hist_r, hist_g, hist_b = calculate_histogram(img)
 
     with dpg.texture_registry(show=False):
         dpg.add_static_texture(width, height, data, tag="texture")
@@ -46,13 +34,40 @@ def open_callback(sender, app_dat, user_data):
     with dpg.window(label="Image Viewer", width=width, height=height):
         dpg.add_image("texture")
 
-        with dpg.plot(label="Histogram"):
+        image = cv2.imread(file_path)
+        blue_channel = image[:, :, 0]
+        green_channel = image[:, :, 1]
+        red_channel = image[:, :, 2]
+
+        blue_hist = cv2.calcHist([blue_channel], [0], None, [256], [0, 256])
+        green_hist = cv2.calcHist([green_channel], [0], None, [256], [0, 256])
+        red_hist = cv2.calcHist([red_channel], [0], None, [256], [0, 256])
+        blue_hist = normalize(blue_hist).flatten()
+        green_hist = normalize(green_hist).flatten()
+        red_hist = normalize(red_hist).flatten()
+
+        with dpg.plot(label="Histogram", width=width, height=height):
             dpg.add_plot_legend()
             dpg.add_plot_axis(dpg.mvXAxis, label="Pixel Intensity")
-            dpg.add_plot_axis(dpg.mvYAxis, label="Frequency")
-            # dpg.add_line_series([i for i in range(256)], hist_r, label="R")
-            # dpg.add_line_series([i for i in range(256)], hist_g, label="G")
-            # dpg.add_line_series([i for i in range(256)], hist_b, label="B")
+            y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Frequency")
+            dpg.add_line_series(
+                x=list(range(256)),
+                y=blue_hist.tolist(),
+                label="Blue",
+                parent=y_axis,
+            )
+            dpg.add_line_series(
+                x=list(range(256)),
+                y=green_hist.tolist(),
+                label="Green",
+                parent=y_axis,
+            )
+            dpg.add_line_series(
+                x=list(range(256)),
+                y=red_hist.tolist(),
+                label="Red",
+                parent=y_axis,
+            )
 
 
 with dpg.file_dialog(
