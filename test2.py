@@ -1,6 +1,9 @@
 import dearpygui.dearpygui as dpg
 import dearpygui.demo as demo
+import numpy as np
 from PIL import Image
+
+dpg.create_context()
 
 
 def open_callback(sender, app_dat, user_data):
@@ -14,9 +17,15 @@ def open_callback(sender, app_dat, user_data):
     print("Format: ", img.format)
     print("Size: ", img.size)
     print("Mode: ", img.mode)
+    width, height = img.size
+    width, height, channels, data = dpg.load_image(file_path)
 
+    with dpg.texture_registry(show=False):
+        dpg.add_static_texture(width, height, data, tag="texture")
 
-dpg.create_context()
+    with dpg.window(label="Image Viewer", width=width, height=height):
+        dpg.add_image("texture")
+
 
 with dpg.file_dialog(
     directory_selector=False,
