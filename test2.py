@@ -1,11 +1,19 @@
 import dearpygui.dearpygui as dpg
 import dearpygui.demo as demo
+from PIL import Image
 
 
 def open_callback(sender, app_dat, user_data):
     print("Sender: ", sender)
     print("App Data: ", app_dat)
     print("User Data: ", user_data)
+    file_path = next(iter(app_dat["selections"].values()))
+    print(file_path)
+
+    img = Image.open(file_path)
+    print("Format: ", img.format)
+    print("Size: ", img.size)
+    print("Mode: ", img.mode)
 
 
 dpg.create_context()
