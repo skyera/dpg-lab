@@ -56,7 +56,9 @@ def upload_file():
     if not version:
         set_status("Version missing!", ok=False)
         return
-    file_path = state["file_path"]
+
+    file_path = dpg.get_value("file_label")
+    # file_path = state["file_path"]
 
     if not file_path or not os.path.exists(file_path):
         set_status("Invalid file selected", ok=False)
@@ -159,7 +161,8 @@ dpg.bind_theme(dark_theme)
 
 # Main Window
 with dpg.window(
-    label="🚀 Linux File Transfer Tool",
+    label="Linux File Transfer Tool",
+    tag="Primary Window",
     width=1400,
     height=900,
     no_resize=True,
@@ -169,7 +172,7 @@ with dpg.window(
     dpg.add_separator()
 
     # Instruction Section
-    with dpg.child_window(width=920, height=120, border=True):
+    with dpg.child_window(width=935, height=120, border=True):
         dpg.add_text("Instructions", color=(200, 200, 100))
         dpg.add_separator()
         dpg.add_text(
@@ -213,8 +216,7 @@ with dpg.window(
         with dpg.child_window(width=450, height=250, border=True):
             dpg.add_text("File Transfer", color=(200, 200, 200))
             dpg.add_separator()
-            dpg.add_text("Selected File:")
-            dpg.add_text("", tag="file_label", wrap=600)
+            dpg.add_input_text(label="Selected File", tag="file_label")
             dpg.add_input_text(label="Version", tag="version")
             dpg.add_spacer(height=50)
             dpg.add_button(
@@ -229,19 +231,17 @@ with dpg.window(
             )
 
     dpg.add_spacer(height=15)
-
-    dpg.add_spacer(height=15)
     dpg.add_separator()
 
-    # Status Bar
     with dpg.group(horizontal=True):
         dpg.add_text("Status:", color=(180, 180, 180))
         dpg.add_text("", tag="status", color=(100, 255, 100))
 
 # Setup viewport with a large fixed size (compatible with older DPG versions)
-dpg.create_viewport(title="Linux File Transfer Tool", width=1000, height=600)
+dpg.create_viewport(title="Linux File Transfer Tool", width=980, height=550)
 dpg.setup_dearpygui()
 dpg.show_viewport()
+dpg.set_primary_window("Primary Window", True)
 
 load_config()
 dpg.start_dearpygui()
