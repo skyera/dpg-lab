@@ -8,7 +8,6 @@ CONFIG_FILE = "connection.json"
 state = {"file_path": ""}
 
 
-# ---------------- Helper Functions ----------------
 def run_cmd(cmd):
     return subprocess.run(cmd, capture_output=True, text=True, shell=False)
 
@@ -19,7 +18,6 @@ def set_status(msg, ok=True):
     dpg.configure_item("status", color=color)
 
 
-# ---------------- SSH Test ----------------
 def test_connection():
     ip = dpg.get_value("ip")
     port = dpg.get_value("port")
@@ -48,19 +46,25 @@ def test_connection():
         set_status(f"SSH failed: {result.stderr.strip()}", ok=False)
 
 
-# ---------------- File Upload ----------------
 def upload_file():
     ip = dpg.get_value("ip")
     port = dpg.get_value("port")
     user = dpg.get_value("user")
     password = dpg.get_value("password")
+    version = dpg.get_value("version")
+    print(version)
+    if not version:
+        set_status("Version missing!", ok=False)
+        return
     file_path = state["file_path"]
 
     if not file_path or not os.path.exists(file_path):
         set_status("Invalid file selected", ok=False)
         return
 
-    remote_path = f"/tmp/{os.path.basename(file_path)}"
+    base, ext = os.path.splitext(os.path.basename(file_path))
+    remote_path = f"/tmp/{base}_{version}{ext}"
+    print(remote_path)
     cmd = [
         "pscp",
         "-batch",
@@ -80,7 +84,6 @@ def upload_file():
         set_status(f"Upload failed: {result.stderr.strip()}", ok=False)
 
 
-# ---------------- JSON Config ----------------
 def save_config():
     data = {
         "ip": dpg.get_value("ip"),
@@ -103,7 +106,6 @@ def load_config():
         dpg.set_value("file_label", state["file_path"])
 
 
-# ---------------- Save JSON to chosen location ----------------
 def save_json_to(path):
     data = {
         "ip": dpg.get_value("ip"),
@@ -119,7 +121,6 @@ def save_json_to(path):
         set_status(f"Failed to save JSON: {e}", ok=False)
 
 
-# ---------------- File Dialog ----------------
 def file_selected(sender, app_data):
     selections = app_data.get("selections", {})
     if selections:
@@ -128,10 +129,8 @@ def file_selected(sender, app_data):
         dpg.set_value("file_label", full_path)
 
 
-# ---------------- UI ----------------
 dpg.create_context()
 
-# File Dialogs
 with dpg.file_dialog(show=False, callback=file_selected, tag="file_dialog"):
     dpg.add_file_extension(".*")
 
@@ -145,7 +144,6 @@ with dpg.file_dialog(
 ):
     dpg.add_file_extension(".json")
 
-# Dark Theme
 with dpg.theme() as dark_theme:
     with dpg.theme_component(dpg.mvAll):
         dpg.add_theme_color(dpg.mvThemeCol_WindowBg, (25, 25, 25))
@@ -169,6 +167,20 @@ with dpg.window(
 ):
     dpg.add_text("Linux File Transfer", color=(150, 200, 255))
     dpg.add_separator()
+
+    # Instruction Section
+    with dpg.child_window(width=920, height=120, border=True):
+        dpg.add_text("Instructions", color=(200, 200, 100))
+        dpg.add_separator()
+        dpg.add_text(
+            "Before uploading, you can test SSH manually:\nRun the following command in a terminal to verify connectivity:",
+            color=(180, 180, 180),
+        )
+        dpg.add_text("plink -P <port> user@ip", color=(100, 255, 255))
+        dpg.add_text(
+            "Replace <port>, user, and ip with your server information.",
+            color=(180, 180, 180),
+        )
 
     # Connection and File Panels
     with dpg.group(horizontal=True):
@@ -217,20 +229,6 @@ with dpg.window(
             )
 
     dpg.add_spacer(height=15)
-
-    # Instruction Section
-    with dpg.child_window(width=920, height=120, border=True):
-        dpg.add_text("Instructions", color=(200, 200, 100))
-        dpg.add_separator()
-        dpg.add_text(
-            "Before uploading, you can test SSH manually:\nRun the following command in a terminal to verify connectivity:",
-            color=(180, 180, 180),
-        )
-        dpg.add_text("plink -P <port> user@ip", color=(100, 255, 255))
-        dpg.add_text(
-            "Replace <port>, user, and ip with your server information.",
-            color=(180, 180, 180),
-        )
 
     dpg.add_spacer(height=15)
     dpg.add_separator()
