@@ -75,14 +75,13 @@ def upload_file():
 
     if result.returncode == 0:
         set_status(f"✅ Uploaded to {remote_path}")
-        save_config()  # optional auto-save
+        save_config()
     else:
         set_status(f"❌ Upload failed: {result.stderr.strip()}", ok=False)
 
 
 # ---------------- JSON Config ----------------
 def save_config():
-    """Save JSON automatically to default location"""
     data = {
         "ip": dpg.get_value("ip"),
         "port": dpg.get_value("port"),
@@ -106,7 +105,6 @@ def load_config():
 
 # ---------------- Save JSON to chosen location ----------------
 def save_json_to(path):
-    """Save current connection info to chosen path"""
     data = {
         "ip": dpg.get_value("ip"),
         "port": dpg.get_value("port"),
@@ -133,11 +131,10 @@ def file_selected(sender, app_data):
 # ---------------- UI ----------------
 dpg.create_context()
 
-# File Dialog for selecting file
+# File Dialogs
 with dpg.file_dialog(show=False, callback=file_selected, tag="file_dialog"):
     dpg.add_file_extension(".*")
 
-# File Dialog for saving JSON
 with dpg.file_dialog(
     show=False,
     callback=lambda s, a: save_json_to(a["file_path_name"]),
@@ -161,25 +158,26 @@ with dpg.theme() as dark_theme:
         dpg.add_theme_style(dpg.mvStyleVar_WindowRounding, 6)
 dpg.bind_theme(dark_theme)
 
-# Load emoji-supporting font (Segoe UI Emoji)
+# Emoji font
 with dpg.font_registry():
-    emoji_font = dpg.add_font("C:/Windows/Fonts/seguiemj.ttf", 18)
+    emoji_font = dpg.add_font("C:/Windows/Fonts/seguiemj.ttf", 20)
 dpg.bind_font(emoji_font)
 
 # Main Window
 with dpg.window(
     label="🚀 Linux File Transfer Tool",
-    width=740,
-    height=480,
+    width=1400,
+    height=900,
     no_resize=True,
     no_collapse=True,
 ):
     dpg.add_text("🚀 Linux File Transfer", color=(150, 200, 255))
     dpg.add_separator()
 
+    # Connection and File Panels
     with dpg.group(horizontal=True):
         # Connection Panel
-        with dpg.child_window(width=340, height=300, border=True):
+        with dpg.child_window(width=650, height=450, border=True):
             dpg.add_text("🔐 Connection", color=(200, 200, 200))
             dpg.add_separator()
             dpg.add_input_text(label="IP Address", tag="ip")
@@ -190,38 +188,54 @@ with dpg.window(
             dpg.add_button(
                 label="🔍 Test Connection",
                 width=-1,
-                height=30,
+                height=35,
                 callback=test_connection,
             )
             dpg.add_spacer(height=8)
             dpg.add_button(
                 label="💾 Save JSON",
                 width=-1,
-                height=30,
+                height=35,
                 callback=lambda: dpg.show_item("save_json_dialog"),
             )
 
-        dpg.add_spacer(width=10)
+        dpg.add_spacer(width=20)
 
         # File Transfer Panel
-        with dpg.child_window(width=340, height=300, border=True):
+        with dpg.child_window(width=650, height=450, border=True):
             dpg.add_text("📁 File Transfer", color=(200, 200, 200))
             dpg.add_separator()
             dpg.add_text("Selected File:")
-            dpg.add_text("", tag="file_label", wrap=300)
-            dpg.add_spacer(height=8)
+            dpg.add_text("", tag="file_label", wrap=600)
+            dpg.add_spacer(height=10)
             dpg.add_button(
                 label="📂 Select File",
                 width=-1,
-                height=30,
+                height=35,
                 callback=lambda: dpg.show_item("file_dialog"),
             )
-            dpg.add_spacer(height=8)
+            dpg.add_spacer(height=10)
             dpg.add_button(
-                label="⬆ Upload to Server", width=-1, height=35, callback=upload_file
+                label="⬆ Upload to Server", width=-1, height=40, callback=upload_file
             )
 
-    dpg.add_spacer(height=10)
+    dpg.add_spacer(height=15)
+
+    # Instruction Section
+    with dpg.child_window(width=1320, height=120, border=True):
+        dpg.add_text("💡 Instructions", color=(200, 200, 100))
+        dpg.add_separator()
+        dpg.add_text(
+            "Before uploading, you can test SSH manually:\nRun the following command in a terminal to verify connectivity:",
+            color=(180, 180, 180),
+        )
+        dpg.add_text("plink -P <port> user@ip", color=(100, 255, 255))
+        dpg.add_text(
+            "Replace <port>, user, and ip with your server information.",
+            color=(180, 180, 180),
+        )
+
+    dpg.add_spacer(height=15)
     dpg.add_separator()
 
     # Status Bar
@@ -229,8 +243,8 @@ with dpg.window(
         dpg.add_text("Status:", color=(180, 180, 180))
         dpg.add_text("", tag="status", color=(100, 255, 100))
 
-# Setup and run
-dpg.create_viewport(title="Linux File Transfer Tool", width=760, height=520)
+# Setup viewport with a large fixed size (compatible with older DPG versions)
+dpg.create_viewport(title="Linux File Transfer Tool", width=1400, height=900)
 dpg.setup_dearpygui()
 dpg.show_viewport()
 
