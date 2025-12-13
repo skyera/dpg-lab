@@ -173,7 +173,7 @@ with dpg.window(
     # Connection and File Panels
     with dpg.group(horizontal=True):
         # Connection Panel
-        with dpg.child_window(width=650, height=450, border=True):
+        with dpg.child_window(width=450, height=250, border=True):
             dpg.add_text("🔐 Connection", color=(200, 200, 200))
             dpg.add_separator()
             dpg.add_input_text(label="IP Address", tag="ip")
@@ -198,12 +198,12 @@ with dpg.window(
         dpg.add_spacer(width=20)
 
         # File Transfer Panel
-        with dpg.child_window(width=650, height=450, border=True):
+        with dpg.child_window(width=450, height=250, border=True):
             dpg.add_text("📁 File Transfer", color=(200, 200, 200))
             dpg.add_separator()
             dpg.add_text("Selected File:")
             dpg.add_text("", tag="file_label", wrap=600)
-            dpg.add_spacer(height=10)
+            dpg.add_spacer(height=50)
             dpg.add_button(
                 label="📂 Select File",
                 width=-1,
@@ -218,7 +218,7 @@ with dpg.window(
     dpg.add_spacer(height=15)
 
     # Instruction Section
-    with dpg.child_window(width=1320, height=120, border=True):
+    with dpg.child_window(width=920, height=120, border=True):
         dpg.add_text("💡 Instructions", color=(200, 200, 100))
         dpg.add_separator()
         dpg.add_text(
@@ -240,7 +240,7 @@ with dpg.window(
         dpg.add_text("", tag="status", color=(100, 255, 100))
 
 # Setup viewport with a large fixed size (compatible with older DPG versions)
-dpg.create_viewport(title="Linux File Transfer Tool", width=1400, height=900)
+dpg.create_viewport(title="Linux File Transfer Tool", width=1000, height=600)
 dpg.setup_dearpygui()
 dpg.show_viewport()
 
