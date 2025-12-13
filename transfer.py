@@ -1,11 +1,38 @@
 import json
 import os
+import shutil
 import subprocess
+import sys
 
 import dearpygui.dearpygui as dpg
 
 CONFIG_FILE = "connection.json"
 state = {"file_path": ""}
+
+
+def resource_path(exe_name):
+    """
+    Resolve executable path for:
+    - PyInstaller bundle (_MEIPASS)
+    - Normal script execution (PATH)
+    """
+    # 1. Running from PyInstaller bundle
+    if hasattr(sys, "_MEIPASS"):
+        candidate = os.path.join(sys._MEIPASS, exe_name)
+        if os.path.exists(candidate):
+            return candidate
+
+    # 2. Running from source: find in PATH
+    found = shutil.which(exe_name)
+    if found:
+        return found
+
+    # 3. Optional: local directory fallback
+    local = os.path.abspath(exe_name)
+    if os.path.exists(local):
+        return local
+
+    raise FileNotFoundError(f"{exe_name} not found in bundle or PATH")
 
 
 def run_cmd(cmd):
@@ -28,8 +55,14 @@ def test_connection():
         set_status("IP or username missing!", ok=False)
         return
 
+    plink = resource_path("plink.exe")
+    print(plink)
+    if not os.path.exists(plink):
+        set_status("plink.exe not found!", ok=False)
+        return
+
     cmd = [
-        "plink",
+        plink,
         "-batch",
         "-P",
         str(port),
@@ -67,8 +100,14 @@ def upload_file():
     base, ext = os.path.splitext(os.path.basename(file_path))
     remote_path = f"/tmp/{base}_{version}{ext}"
     print(remote_path)
+    pscp = resource_path("pscp.exe")
+    print(pscp)
+
+    if not os.path.exists(pscp):
+        set_status("pscp.exe not found!", ok=False)
+        return
     cmd = [
-        "pscp",
+        pscp,
         "-batch",
         "-P",
         str(port),
