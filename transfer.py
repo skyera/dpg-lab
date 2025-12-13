@@ -27,7 +27,7 @@ def test_connection():
     password = dpg.get_value("password")
 
     if not ip or not user:
-        set_status("❌ IP or username missing!", ok=False)
+        set_status("IP or username missing!", ok=False)
         return
 
     cmd = [
@@ -43,9 +43,9 @@ def test_connection():
     result = run_cmd(cmd)
 
     if result.returncode == 0:
-        set_status("✅ SSH connection successful")
+        set_status("SSH connection successful")
     else:
-        set_status(f"❌ SSH failed: {result.stderr.strip()}", ok=False)
+        set_status(f"SSH failed: {result.stderr.strip()}", ok=False)
 
 
 # ---------------- File Upload ----------------
@@ -57,7 +57,7 @@ def upload_file():
     file_path = state["file_path"]
 
     if not file_path or not os.path.exists(file_path):
-        set_status("❌ Invalid file selected", ok=False)
+        set_status("Invalid file selected", ok=False)
         return
 
     remote_path = f"/tmp/{os.path.basename(file_path)}"
@@ -74,10 +74,10 @@ def upload_file():
     result = run_cmd(cmd)
 
     if result.returncode == 0:
-        set_status(f"✅ Uploaded to {remote_path}")
+        set_status(f"Uploaded to {remote_path}")
         save_config()
     else:
-        set_status(f"❌ Upload failed: {result.stderr.strip()}", ok=False)
+        set_status(f"Upload failed: {result.stderr.strip()}", ok=False)
 
 
 # ---------------- JSON Config ----------------
@@ -114,9 +114,9 @@ def save_json_to(path):
     try:
         with open(path, "w") as f:
             json.dump(data, f, indent=2)
-        set_status(f"✅ JSON saved to {path}")
+        set_status(f"JSON saved to {path}")
     except Exception as e:
-        set_status(f"❌ Failed to save JSON: {e}", ok=False)
+        set_status(f"Failed to save JSON: {e}", ok=False)
 
 
 # ---------------- File Dialog ----------------
@@ -167,14 +167,14 @@ with dpg.window(
     no_resize=True,
     no_collapse=True,
 ):
-    dpg.add_text("🚀 Linux File Transfer", color=(150, 200, 255))
+    dpg.add_text("Linux File Transfer", color=(150, 200, 255))
     dpg.add_separator()
 
     # Connection and File Panels
     with dpg.group(horizontal=True):
         # Connection Panel
         with dpg.child_window(width=450, height=250, border=True):
-            dpg.add_text("🔐 Connection", color=(200, 200, 200))
+            dpg.add_text("Connection", color=(200, 200, 200))
             dpg.add_separator()
             dpg.add_input_text(label="IP Address", tag="ip")
             dpg.add_input_int(label="Port", tag="port", default_value=22)
@@ -182,14 +182,14 @@ with dpg.window(
             dpg.add_input_text(label="Password", password=True, tag="password")
             dpg.add_spacer(height=10)
             dpg.add_button(
-                label="🔍 Test Connection",
+                label="Test Connection",
                 width=-1,
                 height=35,
                 callback=test_connection,
             )
             dpg.add_spacer(height=8)
             dpg.add_button(
-                label="💾 Save JSON",
+                label="Save JSON",
                 width=-1,
                 height=35,
                 callback=lambda: dpg.show_item("save_json_dialog"),
@@ -199,27 +199,28 @@ with dpg.window(
 
         # File Transfer Panel
         with dpg.child_window(width=450, height=250, border=True):
-            dpg.add_text("📁 File Transfer", color=(200, 200, 200))
+            dpg.add_text("File Transfer", color=(200, 200, 200))
             dpg.add_separator()
             dpg.add_text("Selected File:")
             dpg.add_text("", tag="file_label", wrap=600)
+            dpg.add_input_text(label="Version", tag="version")
             dpg.add_spacer(height=50)
             dpg.add_button(
-                label="📂 Select File",
+                label="Select File",
                 width=-1,
                 height=35,
                 callback=lambda: dpg.show_item("file_dialog"),
             )
             dpg.add_spacer(height=10)
             dpg.add_button(
-                label="⬆ Upload to Server", width=-1, height=40, callback=upload_file
+                label="Upload to Server", width=-1, height=40, callback=upload_file
             )
 
     dpg.add_spacer(height=15)
 
     # Instruction Section
     with dpg.child_window(width=920, height=120, border=True):
-        dpg.add_text("💡 Instructions", color=(200, 200, 100))
+        dpg.add_text("Instructions", color=(200, 200, 100))
         dpg.add_separator()
         dpg.add_text(
             "Before uploading, you can test SSH manually:\nRun the following command in a terminal to verify connectivity:",
