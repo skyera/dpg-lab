@@ -226,8 +226,8 @@ with dpg.window(
                 "Replace <port>, user, and ip with your server information.",
                 color=(180, 180, 180),
             )
-        dpg.add_spacer(width=30)
-        with dpg.child_window(label="SpiralChild", width=435, height=120, border=True):
+        dpg.add_spacer(width=20)
+        with dpg.child_window(label="SpiralChild", width=450, height=120, border=True):
 
             # 2. Add a Drawlist for custom graphics
             with dpg.drawlist(width=450, height=120):
