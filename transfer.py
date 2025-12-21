@@ -10,7 +10,7 @@ import dearpygui.dearpygui as dpg
 
 CONFIG_FILE = "connection.json"
 state = {"file_path": ""}
-
+image_filename = "lenna.png"
 
 def resource_path(exe_name):
     """
@@ -173,6 +173,13 @@ def file_selected(sender, app_data):
 
 
 dpg.create_context()
+w, h, c , data = dpg.load_image(resource_path(image_filename))
+desired_width =  120
+aspect_ratio = h / w
+desired_height = int(desired_width * aspect_ratio)
+
+with dpg.texture_registry(show=False):
+    dpg.add_static_texture(w, h, data, tag="image_texture")
 
 with dpg.file_dialog(show=False, callback=file_selected, tag="file_dialog"):
     dpg.add_file_extension(".*")
@@ -187,17 +194,17 @@ with dpg.file_dialog(
 ):
     dpg.add_file_extension(".json")
 
-with dpg.theme() as dark_theme:
-    with dpg.theme_component(dpg.mvAll):
-        dpg.add_theme_color(dpg.mvThemeCol_WindowBg, (25, 25, 25))
-        dpg.add_theme_color(dpg.mvThemeCol_ChildBg, (35, 35, 35))
-        dpg.add_theme_color(dpg.mvThemeCol_Button, (70, 70, 70))
-        dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, (90, 90, 90))
-        dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, (110, 110, 110))
-        dpg.add_theme_color(dpg.mvThemeCol_Text, (200, 200, 200))
-        dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 6)
-        dpg.add_theme_style(dpg.mvStyleVar_WindowRounding, 6)
-dpg.bind_theme(dark_theme)
+# with dpg.theme() as dark_theme:
+#     with dpg.theme_component(dpg.mvAll):
+#         dpg.add_theme_color(dpg.mvThemeCol_WindowBg, (25, 25, 25))
+#         dpg.add_theme_color(dpg.mvThemeCol_ChildBg, (35, 35, 35))
+#         dpg.add_theme_color(dpg.mvThemeCol_Button, (70, 70, 70))
+#         dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, (90, 90, 90))
+#         dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, (110, 110, 110))
+#         dpg.add_theme_color(dpg.mvThemeCol_Text, (200, 200, 200))
+#         dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 6)
+#         dpg.add_theme_style(dpg.mvStyleVar_WindowRounding, 6)
+# dpg.bind_theme(dark_theme)
 
 
 # Main Window
@@ -227,13 +234,16 @@ with dpg.window(
                 color=(180, 180, 180),
             )
         dpg.add_spacer(width=20)
-        with dpg.child_window(label="SpiralChild", width=450, height=120, border=True):
+
+        with dpg.child_window(width = 120, height=120, border=True):
+            dpg.add_image("image_texture", width=desired_width, height=desired_height)
+        with dpg.child_window(label="SpiralChild", width=330, height=120, border=True):
 
             # 2. Add a Drawlist for custom graphics
             with dpg.drawlist(width=450, height=120):
 
                 # Setup variables for the spiral
-                center_x, center_y = 225, 60
+                center_x, center_y = 160, 60
                 points = []
                 num_points = 500
                 turns = 10  # How many loops
