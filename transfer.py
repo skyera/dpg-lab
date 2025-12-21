@@ -1,5 +1,7 @@
 import json
+import math
 import os
+import random
 import shutil
 import subprocess
 import sys
@@ -210,19 +212,54 @@ with dpg.window(
     dpg.add_text("Linux File Transfer", color=(150, 200, 255))
     dpg.add_separator()
 
-    # Instruction Section
-    with dpg.child_window(width=935, height=120, border=True):
-        dpg.add_text("Instructions", color=(200, 200, 100))
-        dpg.add_separator()
-        dpg.add_text(
-            "Before uploading, you can test SSH manually:\nRun the following command in a terminal to verify connectivity:",
-            color=(180, 180, 180),
-        )
-        dpg.add_text("plink -P <port> user@ip", color=(100, 255, 255))
-        dpg.add_text(
-            "Replace <port>, user, and ip with your server information.",
-            color=(180, 180, 180),
-        )
+    with dpg.group(horizontal=True):
+        # Instruction Section
+        with dpg.child_window(width=450, height=120, border=True):
+            dpg.add_text("Instructions", color=(200, 200, 100))
+            dpg.add_separator()
+            dpg.add_text(
+                "Before uploading, you can test SSH manually:\nRun the following command in a terminal to verify connectivity:",
+                color=(180, 180, 180),
+            )
+            dpg.add_text("plink -P <port> user@ip", color=(100, 255, 255))
+            dpg.add_text(
+                "Replace <port>, user, and ip with your server information.",
+                color=(180, 180, 180),
+            )
+        dpg.add_spacer(width=30)
+        with dpg.child_window(label="SpiralChild", width=435, height=120, border=True):
+
+            # 2. Add a Drawlist for custom graphics
+            with dpg.drawlist(width=450, height=120):
+
+                # Setup variables for the spiral
+                center_x, center_y = 225, 60
+                points = []
+                num_points = 500
+                turns = 10  # How many loops
+                max_radius = 50
+
+                # Randomize color (RGBA)
+                random_color = [random.randint(0, 255) for _ in range(3)] + [255]
+
+                # 3. Calculate Spiral Points
+                for i in range(num_points):
+                    # Progress from 0 to 1
+                    t = i / num_points
+
+                    # Angle increases over time
+                    angle = t * turns * 2 * math.pi
+
+                    # Radius increases over time
+                    r = t * max_radius
+
+                    # Convert Polar to Cartesian
+                    x = center_x + r * math.cos(angle)
+                    y = center_y + r * math.sin(angle)
+                    points.append([x, y])
+
+                # 4. Draw the polyline
+                dpg.draw_polyline(points, color=random_color, thickness=2)
 
     # Connection and File Panels
     with dpg.group(horizontal=True):
