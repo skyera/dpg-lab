@@ -5,12 +5,66 @@ import random
 import shutil
 import subprocess
 import sys
+import time
 
 import dearpygui.dearpygui as dpg
 
 CONFIG_FILE = "connection.json"
 state = {"file_path": ""}
 image_filename = "lenna.png"
+
+# Particle system state for "life patterns"
+particles = []
+for _ in range(25):
+    particles.append({
+        "pos": [random.uniform(0, 330), random.uniform(0, 120)],
+        "vel": [random.uniform(-0.3, 0.3), random.uniform(-0.3, 0.3)],
+        "color": [random.randint(50, 150), random.randint(150, 255), random.randint(200, 255), 150],
+        "size": random.uniform(1, 3)
+    })
+
+def update_life_patterns():
+    if not dpg.does_item_exist("life_drawlist"):
+        return
+    
+    dpg.delete_item("life_drawlist", children_only=True)
+    
+    t = time.time()
+    
+    # 1. Breathing / Pulsing Spiral
+    center_x, center_y = 165, 60
+    points = []
+    num_points = 150
+    # Pulse turns and radius based on time
+    turns = 6 + math.sin(t * 0.7) * 3
+    max_radius = 45 + math.cos(t * 1.1) * 10
+    
+    for i in range(num_points):
+        prog = i / num_points
+        angle = prog * turns * 2 * math.pi + t * 0.5
+        r = prog * max_radius
+        x = center_x + r * math.cos(angle)
+        y = center_y + r * math.sin(angle)
+        points.append([x, y])
+    
+    # Color shifts over time
+    r_val = int(100 + 50 * math.sin(t))
+    g_val = int(200 + 55 * math.cos(t * 0.5))
+    dpg.draw_polyline(points, color=[r_val, g_val, 255, 180], thickness=2, parent="life_drawlist")
+    
+    # 2. Floating "Life" Particles
+    for p in particles:
+        # Move particles
+        p["pos"][0] += p["vel"][0]
+        p["pos"][1] += p["vel"][1]
+        
+        # Bounce off boundaries of the child window
+        if p["pos"][0] < 5 or p["pos"][0] > 325: p["vel"][0] *= -1
+        if p["pos"][1] < 5 or p["pos"][1] > 115: p["vel"][1] *= -1
+        
+        # Draw particle and a faint glow
+        dpg.draw_circle(p["pos"], p["size"] + 2, fill=[p["color"][0], p["color"][1], p["color"][2], 30], color=[0,0,0,0], parent="life_drawlist")
+        dpg.draw_circle(p["pos"], p["size"], fill=p["color"], color=p["color"], parent="life_drawlist")
 
 def resource_path(exe_name):
     """
@@ -237,39 +291,9 @@ with dpg.window(
 
         with dpg.child_window(width = 120, height=120, border=True):
             dpg.add_image("image_texture", width=desired_width, height=desired_height)
-        with dpg.child_window(label="SpiralChild", width=330, height=120, border=True):
-
-            # 2. Add a Drawlist for custom graphics
-            with dpg.drawlist(width=450, height=120):
-
-                # Setup variables for the spiral
-                center_x, center_y = 160, 60
-                points = []
-                num_points = 500
-                turns = 10  # How many loops
-                max_radius = 50
-
-                # Randomize color (RGBA)
-                random_color = [random.randint(0, 255) for _ in range(3)] + [255]
-
-                # 3. Calculate Spiral Points
-                for i in range(num_points):
-                    # Progress from 0 to 1
-                    t = i / num_points
-
-                    # Angle increases over time
-                    angle = t * turns * 2 * math.pi
-
-                    # Radius increases over time
-                    r = t * max_radius
-
-                    # Convert Polar to Cartesian
-                    x = center_x + r * math.cos(angle)
-                    y = center_y + r * math.sin(angle)
-                    points.append([x, y])
-
-                # 4. Draw the polyline
-                dpg.draw_polyline(points, color=random_color, thickness=2)
+        with dpg.child_window(label="LifePatterns", width=330, height=120, border=True):
+            with dpg.drawlist(width=330, height=120, tag="life_drawlist"):
+                pass # Populated by update_life_patterns
 
     # Connection and File Panels
     with dpg.group(horizontal=True):
@@ -330,5 +354,10 @@ dpg.show_viewport()
 dpg.set_primary_window("Primary Window", True)
 
 load_config()
-dpg.start_dearpygui()
+
+# Manual render loop for animation
+while dpg.is_dearpygui_running():
+    update_life_patterns()
+    dpg.render_dearpygui_frame()
+
 dpg.destroy_context()
