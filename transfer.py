@@ -16,27 +16,35 @@ image_filename = "lenna.png"
 # Particle system state for "life patterns"
 particles = []
 for _ in range(35):
-    particles.append({
-        "pos": [random.uniform(0, 330), random.uniform(0, 120)],
-        "vel": [random.uniform(-0.4, 0.4), random.uniform(-0.4, 0.4)],
-        "color": [random.randint(50, 150), random.randint(150, 255), random.randint(200, 255), 150],
-        "size": random.uniform(1.5, 4)
-    })
+    particles.append(
+        {
+            "pos": [random.uniform(0, 330), random.uniform(0, 120)],
+            "vel": [random.uniform(-0.4, 0.4), random.uniform(-0.4, 0.4)],
+            "color": [
+                random.randint(50, 150),
+                random.randint(150, 255),
+                random.randint(200, 255),
+                150,
+            ],
+            "size": random.uniform(1.5, 4),
+        }
+    )
+
 
 def update_life_patterns():
     if not dpg.does_item_exist("life_drawlist"):
         return
-    
+
     dpg.delete_item("life_drawlist", children_only=True)
     t = time.time()
-    
-    # Updated center for 330x120
-    center_x, center_y = 165, 60
+
+    # Updated center for 160x120
+    center_x, center_y = 80, 60
     points = []
-    num_points = 200
+    num_points = 150
     turns = 8 + math.sin(t * 0.7) * 4
-    max_radius = 45 + math.cos(t * 1.1) * 10
-    
+    max_radius = 40 + math.cos(t * 1.1) * 10
+
     for i in range(num_points):
         prog = i / num_points
         angle = prog * turns * 2 * math.pi + t * 0.5
@@ -44,52 +52,81 @@ def update_life_patterns():
         x = center_x + r * math.cos(angle)
         y = center_y + r * math.sin(angle)
         points.append([x, y])
-    
+
     r_val = int(100 + 50 * math.sin(t))
     g_val = int(200 + 55 * math.cos(t * 0.5))
-    dpg.draw_polyline(points, color=[r_val, g_val, 255, 180], thickness=2, parent="life_drawlist")
-    
+    dpg.draw_polyline(
+        points, color=[r_val, g_val, 255, 180], thickness=2, parent="life_drawlist"
+    )
+
     for p in particles:
         p["pos"][0] += p["vel"][0]
         p["pos"][1] += p["vel"][1]
-        
-        # Updated boundaries for 330x120
-        if p["pos"][0] < 5 or p["pos"][0] > 325: p["vel"][0] *= -1
-        if p["pos"][1] < 5 or p["pos"][1] > 115: p["vel"][1] *= -1
-        
-        dpg.draw_circle(p["pos"], p["size"] + 2, fill=[p["color"][0], p["color"][1], p["color"][2], 30], color=[0,0,0,0], parent="life_drawlist")
-        dpg.draw_circle(p["pos"], p["size"], fill=p["color"], color=p["color"], parent="life_drawlist")
+
+        # Updated boundaries for 160x120
+        if p["pos"][0] < 5 or p["pos"][0] > 155:
+            p["vel"][0] *= -1
+        if p["pos"][1] < 5 or p["pos"][1] > 115:
+            p["vel"][1] *= -1
+
+        dpg.draw_circle(
+            p["pos"],
+            p["size"] + 2,
+            fill=[p["color"][0], p["color"][1], p["color"][2], 30],
+            color=[0, 0, 0, 0],
+            parent="life_drawlist",
+        )
+        dpg.draw_circle(
+            p["pos"],
+            p["size"],
+            fill=p["color"],
+            color=p["color"],
+            parent="life_drawlist",
+        )
+
 
 def update_solar_system():
     if not dpg.does_item_exist("solar_drawlist"):
         return
-    
+
     dpg.delete_item("solar_drawlist", children_only=True)
     t = time.time()
-    # Updated center for 460x120
-    cx, cy = 230, 60
-    
-    dpg.draw_circle([cx, cy], 12, fill=[255, 200, 0, 255], color=[255, 255, 100, 255], parent="solar_drawlist")
-    
-    # Radii adjusted for 120h
+    # Updated center for 160x120
+    cx, cy = 80, 60
+
+    dpg.draw_circle(
+        [cx, cy],
+        10,
+        fill=[255, 200, 0, 255],
+        color=[255, 255, 100, 255],
+        parent="solar_drawlist",
+    )
+
     planets = [
-        {"r": 20, "s": 1.8, "sz": 3, "c": [180, 180, 180, 255]}, 
-        {"r": 35, "s": 1.2, "sz": 4, "c": [230, 190, 150, 255]}, 
-        {"r": 50, "s": 0.8, "sz": 5, "c": [100, 150, 255, 255]}, 
+        {"r": 22, "s": 1.8, "sz": 3, "c": [180, 180, 180, 255]},
+        {"r": 35, "s": 1.2, "sz": 4, "c": [230, 190, 150, 255]},
+        {"r": 48, "s": 0.8, "sz": 5, "c": [100, 150, 255, 255]},
     ]
-    
+
     for p in planets:
         angle = t * p["s"]
         px = cx + p["r"] * math.cos(angle)
         py = cy + p["r"] * math.sin(angle)
-        dpg.draw_circle([cx, cy], p["r"], color=[60, 60, 60, 100], parent="solar_drawlist")
-        dpg.draw_circle([px, py], p["sz"], fill=p["c"], color=p["c"], parent="solar_drawlist")
-        
+        dpg.draw_circle(
+            [cx, cy], p["r"], color=[60, 60, 60, 100], parent="solar_drawlist"
+        )
+        dpg.draw_circle(
+            [px, py], p["sz"], fill=p["c"], color=p["c"], parent="solar_drawlist"
+        )
+
         if p["c"] == [100, 150, 255, 255]:
             ma = t * 4
             mx = px + 8 * math.cos(ma)
             my = py + 8 * math.sin(ma)
-            dpg.draw_circle([mx, my], 1.5, fill=[200, 200, 200, 255], parent="solar_drawlist")
+            dpg.draw_circle(
+                [mx, my], 1.5, fill=[200, 200, 200, 255], parent="solar_drawlist"
+            )
+
 
 def resource_path(exe_name):
     """
@@ -252,8 +289,8 @@ def file_selected(sender, app_data):
 
 
 dpg.create_context()
-w, h, c , data = dpg.load_image(resource_path(image_filename))
-desired_width =  120
+w, h, c, data = dpg.load_image(resource_path(image_filename))
+desired_width = 120
 aspect_ratio = h / w
 desired_height = int(desired_width * aspect_ratio)
 
@@ -291,7 +328,7 @@ with dpg.window(
     label="Linux File Transfer Tool",
     tag="Primary Window",
     width=1050,
-    height=640,
+    height=500,
     no_resize=True,
     no_collapse=True,
 ):
@@ -299,8 +336,8 @@ with dpg.window(
     dpg.add_separator()
 
     with dpg.group(horizontal=True):
-        # Instruction Section (Matches the height of row1 + spacer + row2)
-        with dpg.child_window(width=450, height=250, border=True):
+        # Instruction Section (Matches the height of a single row)
+        with dpg.child_window(width=450, height=120, border=True):
             dpg.add_text("Instructions", color=(200, 200, 100))
             dpg.add_separator()
             dpg.add_text(
@@ -308,30 +345,30 @@ with dpg.window(
                 color=(180, 180, 180),
             )
             dpg.add_text("plink -P <port> user@ip", color=(100, 255, 255))
-            dpg.add_text(
-                "Replace <port>, user, and ip with your server information.",
-                color=(180, 180, 180),
-            )
-        
+
         dpg.add_spacer(width=20)
 
-        with dpg.group():
-            # Top row: Image and LifePatterns
-            with dpg.group(horizontal=True):
-                with dpg.child_window(width=120, height=120, border=True):
-                    dpg.add_image("image_texture", width=desired_width, height=desired_height)
-                
-                dpg.add_spacer(width=10)
-                
-                with dpg.child_window(label="LifePatterns", width=330, height=120, border=True):
-                    with dpg.drawlist(width=330, height=120, tag="life_drawlist"):
-                        pass
-            
-            dpg.add_spacer(height=10)
-            
-            # Bottom row: SolarSystem (Width = 120 + 10 + 330 = 460)
-            with dpg.child_window(label="SolarSystem", width=460, height=120, border=True):
-                with dpg.drawlist(width=460, height=120, tag="solar_drawlist"):
+        # Single row: Image, LifePatterns, and SolarSystem
+        with dpg.group(horizontal=True):
+            with dpg.child_window(width=120, height=120, border=True):
+                dpg.add_image(
+                    "image_texture", width=desired_width, height=desired_height
+                )
+
+            dpg.add_spacer(width=10)
+
+            with dpg.child_window(
+                label="LifePatterns", width=160, height=120, border=True
+            ):
+                with dpg.drawlist(width=160, height=120, tag="life_drawlist"):
+                    pass
+
+            dpg.add_spacer(width=10)
+
+            with dpg.child_window(
+                label="SolarSystem", width=160, height=120, border=True
+            ):
+                with dpg.drawlist(width=160, height=120, tag="solar_drawlist"):
                     pass
 
     # Connection and File Panels
@@ -387,7 +424,7 @@ with dpg.window(
         dpg.add_text("", tag="status", color=(100, 255, 100))
 
 # Setup viewport with a large fixed size (compatible with older DPG versions)
-dpg.create_viewport(title="Linux File Transfer Tool", width=1000, height=660)
+dpg.create_viewport(title="Linux File Transfer Tool", width=1000, height=550)
 dpg.setup_dearpygui()
 dpg.show_viewport()
 dpg.set_primary_window("Primary Window", True)
