@@ -1,6 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-datas = [ ("plink.exe", "."), ("pscp.exe", ".") ]
+datas = [ ("plink.exe", "."), ("pscp.exe", "."), ("lenna.png", ".") ]
 a = Analysis(
     ['transfer.py'],
     pathex=[],

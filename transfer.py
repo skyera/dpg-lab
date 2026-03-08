@@ -15,12 +15,12 @@ image_filename = "lenna.png"
 
 # Particle system state for "life patterns"
 particles = []
-for _ in range(25):
+for _ in range(35):
     particles.append({
         "pos": [random.uniform(0, 330), random.uniform(0, 120)],
-        "vel": [random.uniform(-0.3, 0.3), random.uniform(-0.3, 0.3)],
+        "vel": [random.uniform(-0.4, 0.4), random.uniform(-0.4, 0.4)],
         "color": [random.randint(50, 150), random.randint(150, 255), random.randint(200, 255), 150],
-        "size": random.uniform(1, 3)
+        "size": random.uniform(1.5, 4)
     })
 
 def update_life_patterns():
@@ -28,15 +28,13 @@ def update_life_patterns():
         return
     
     dpg.delete_item("life_drawlist", children_only=True)
-    
     t = time.time()
     
-    # 1. Breathing / Pulsing Spiral
+    # Updated center for 330x120
     center_x, center_y = 165, 60
     points = []
-    num_points = 150
-    # Pulse turns and radius based on time
-    turns = 6 + math.sin(t * 0.7) * 3
+    num_points = 200
+    turns = 8 + math.sin(t * 0.7) * 4
     max_radius = 45 + math.cos(t * 1.1) * 10
     
     for i in range(num_points):
@@ -47,24 +45,51 @@ def update_life_patterns():
         y = center_y + r * math.sin(angle)
         points.append([x, y])
     
-    # Color shifts over time
     r_val = int(100 + 50 * math.sin(t))
     g_val = int(200 + 55 * math.cos(t * 0.5))
     dpg.draw_polyline(points, color=[r_val, g_val, 255, 180], thickness=2, parent="life_drawlist")
     
-    # 2. Floating "Life" Particles
     for p in particles:
-        # Move particles
         p["pos"][0] += p["vel"][0]
         p["pos"][1] += p["vel"][1]
         
-        # Bounce off boundaries of the child window
+        # Updated boundaries for 330x120
         if p["pos"][0] < 5 or p["pos"][0] > 325: p["vel"][0] *= -1
         if p["pos"][1] < 5 or p["pos"][1] > 115: p["vel"][1] *= -1
         
-        # Draw particle and a faint glow
         dpg.draw_circle(p["pos"], p["size"] + 2, fill=[p["color"][0], p["color"][1], p["color"][2], 30], color=[0,0,0,0], parent="life_drawlist")
         dpg.draw_circle(p["pos"], p["size"], fill=p["color"], color=p["color"], parent="life_drawlist")
+
+def update_solar_system():
+    if not dpg.does_item_exist("solar_drawlist"):
+        return
+    
+    dpg.delete_item("solar_drawlist", children_only=True)
+    t = time.time()
+    # Updated center for 460x120
+    cx, cy = 230, 60
+    
+    dpg.draw_circle([cx, cy], 12, fill=[255, 200, 0, 255], color=[255, 255, 100, 255], parent="solar_drawlist")
+    
+    # Radii adjusted for 120h
+    planets = [
+        {"r": 20, "s": 1.8, "sz": 3, "c": [180, 180, 180, 255]}, 
+        {"r": 35, "s": 1.2, "sz": 4, "c": [230, 190, 150, 255]}, 
+        {"r": 50, "s": 0.8, "sz": 5, "c": [100, 150, 255, 255]}, 
+    ]
+    
+    for p in planets:
+        angle = t * p["s"]
+        px = cx + p["r"] * math.cos(angle)
+        py = cy + p["r"] * math.sin(angle)
+        dpg.draw_circle([cx, cy], p["r"], color=[60, 60, 60, 100], parent="solar_drawlist")
+        dpg.draw_circle([px, py], p["sz"], fill=p["c"], color=p["c"], parent="solar_drawlist")
+        
+        if p["c"] == [100, 150, 255, 255]:
+            ma = t * 4
+            mx = px + 8 * math.cos(ma)
+            my = py + 8 * math.sin(ma)
+            dpg.draw_circle([mx, my], 1.5, fill=[200, 200, 200, 255], parent="solar_drawlist")
 
 def resource_path(exe_name):
     """
@@ -265,8 +290,8 @@ with dpg.file_dialog(
 with dpg.window(
     label="Linux File Transfer Tool",
     tag="Primary Window",
-    width=1400,
-    height=900,
+    width=1050,
+    height=640,
     no_resize=True,
     no_collapse=True,
 ):
@@ -274,8 +299,8 @@ with dpg.window(
     dpg.add_separator()
 
     with dpg.group(horizontal=True):
-        # Instruction Section
-        with dpg.child_window(width=450, height=120, border=True):
+        # Instruction Section (Matches the height of row1 + spacer + row2)
+        with dpg.child_window(width=450, height=250, border=True):
             dpg.add_text("Instructions", color=(200, 200, 100))
             dpg.add_separator()
             dpg.add_text(
@@ -287,13 +312,27 @@ with dpg.window(
                 "Replace <port>, user, and ip with your server information.",
                 color=(180, 180, 180),
             )
+        
         dpg.add_spacer(width=20)
 
-        with dpg.child_window(width = 120, height=120, border=True):
-            dpg.add_image("image_texture", width=desired_width, height=desired_height)
-        with dpg.child_window(label="LifePatterns", width=330, height=120, border=True):
-            with dpg.drawlist(width=330, height=120, tag="life_drawlist"):
-                pass # Populated by update_life_patterns
+        with dpg.group():
+            # Top row: Image and LifePatterns
+            with dpg.group(horizontal=True):
+                with dpg.child_window(width=120, height=120, border=True):
+                    dpg.add_image("image_texture", width=desired_width, height=desired_height)
+                
+                dpg.add_spacer(width=10)
+                
+                with dpg.child_window(label="LifePatterns", width=330, height=120, border=True):
+                    with dpg.drawlist(width=330, height=120, tag="life_drawlist"):
+                        pass
+            
+            dpg.add_spacer(height=10)
+            
+            # Bottom row: SolarSystem (Width = 120 + 10 + 330 = 460)
+            with dpg.child_window(label="SolarSystem", width=460, height=120, border=True):
+                with dpg.drawlist(width=460, height=120, tag="solar_drawlist"):
+                    pass
 
     # Connection and File Panels
     with dpg.group(horizontal=True):
@@ -348,7 +387,7 @@ with dpg.window(
         dpg.add_text("", tag="status", color=(100, 255, 100))
 
 # Setup viewport with a large fixed size (compatible with older DPG versions)
-dpg.create_viewport(title="Linux File Transfer Tool", width=980, height=550)
+dpg.create_viewport(title="Linux File Transfer Tool", width=1000, height=660)
 dpg.setup_dearpygui()
 dpg.show_viewport()
 dpg.set_primary_window("Primary Window", True)
@@ -358,6 +397,7 @@ load_config()
 # Manual render loop for animation
 while dpg.is_dearpygui_running():
     update_life_patterns()
+    update_solar_system()
     dpg.render_dearpygui_frame()
 
 dpg.destroy_context()
