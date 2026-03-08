@@ -310,6 +310,65 @@ with dpg.file_dialog(
 ):
     dpg.add_file_extension(".json")
 
+
+def create_about_dialog():
+    with dpg.window(
+        label="About - USA Flag",
+        modal=True,
+        show=False,
+        tag="about_dialog",
+        width=420,
+        height=350,
+        no_resize=True,
+    ):
+        dpg.add_text("Linux File Transfer 1.0.0", color=(150, 200, 255))
+        dpg.add_spacer(height=10)
+
+        with dpg.drawlist(width=400, height=210):
+            # Flag dimensions
+            fw, fh = 380, 200
+            ox, oy = 10, 0
+
+            # Draw 13 stripes
+            stripe_h = fh / 13
+            for i in range(13):
+                color = (178, 34, 52) if i % 2 == 0 else (255, 255, 255)
+                dpg.draw_rectangle(
+                    [ox, oy + i * stripe_h],
+                    [ox + fw, oy + (i + 1) * stripe_h],
+                    fill=color,
+                    color=color,
+                )
+
+            # Draw Union (blue box)
+            uw = fw * 0.4
+            uh = stripe_h * 7
+            dpg.draw_rectangle(
+                [ox, oy], [ox + uw, oy + uh], fill=(60, 59, 110), color=(60, 59, 110)
+            )
+
+            # Draw simplified stars (white dots)
+            for row in range(9):
+                for col in range(11):
+                    if (row % 2 == 0 and col % 2 == 0) or (
+                        row % 2 != 0 and col % 2 != 0
+                    ):
+                        sx = ox + (col + 1) * (uw / 12)
+                        sy = oy + (row + 1) * (uh / 10)
+                        dpg.draw_circle(
+                            [sx, sy], 2, fill=(255, 255, 255), color=(255, 255, 255)
+                        )
+
+        dpg.add_spacer(height=10)
+        dpg.add_button(
+            label="Close",
+            width=100,
+            callback=lambda: dpg.configure_item("about_dialog", show=False),
+        )
+
+
+create_about_dialog()
+
 # with dpg.theme() as dark_theme:
 #     with dpg.theme_component(dpg.mvAll):
 #         dpg.add_theme_color(dpg.mvThemeCol_WindowBg, (25, 25, 25))
@@ -332,6 +391,12 @@ with dpg.window(
     no_resize=True,
     no_collapse=True,
 ):
+    with dpg.menu_bar():
+        with dpg.menu(label="Help"):
+            dpg.add_menu_item(
+                label="About", callback=lambda: dpg.show_item("about_dialog")
+            )
+
     dpg.add_text("Linux File Transfer", color=(150, 200, 255))
     dpg.add_separator()
 
