@@ -317,17 +317,17 @@ def create_about_dialog():
         modal=True,
         show=False,
         tag="about_dialog",
-        width=420,
-        height=350,
+        width=240,
+        height=250,
         no_resize=True,
     ):
         dpg.add_text("Linux File Transfer 1.0.0", color=(150, 200, 255))
         dpg.add_spacer(height=10)
 
-        with dpg.drawlist(width=400, height=210):
+        with dpg.drawlist(width=200, height=110):
             # Flag dimensions
-            fw, fh = 380, 200
-            ox, oy = 10, 0
+            fw, fh = 190, 100
+            ox, oy = 5, 0
 
             # Draw 13 stripes
             stripe_h = fh / 13
@@ -356,7 +356,7 @@ def create_about_dialog():
                         sx = ox + (col + 1) * (uw / 12)
                         sy = oy + (row + 1) * (uh / 10)
                         dpg.draw_circle(
-                            [sx, sy], 2, fill=(255, 255, 255), color=(255, 255, 255)
+                            [sx, sy], 1, fill=(255, 255, 255), color=(255, 255, 255)
                         )
 
         dpg.add_spacer(height=10)
