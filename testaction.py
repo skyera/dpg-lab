@@ -4,6 +4,7 @@ import random
 import subprocess
 import threading
 import time
+import os
 
 import dearpygui.dearpygui as dpg
 import dearpygui.demo as demo
@@ -12,276 +13,246 @@ import pyfiglet
 from faker import Faker
 from mdgen import MarkdownPostProvider
 
+# Initialize Faker
+fake = Faker()
+fake.add_provider(MarkdownPostProvider)
 
 def get_quote():
-    result = subprocess.run(["fortune|cowsay"], shell=True, stdout=subprocess.PIPE)
-    return result.stdout.decode("utf-8")
-
-
-def get_fake_markdown():
-    fake = Faker()
-    fake.add_provider(MarkdownPostProvider)
-    fake_post = fake.post(size="medium")
-    return fake_post
-
-
-def get_fake_text():
-    fake = Faker()
-    return fake.text()
-
-
-def get_checked_tc_count():
-    ts_tags = ("t1", "t2", "t3", "t4", "t5")
-    count = 0
-    for ts in ts_tags:
-        if dpg.get_value(ts):
-            count += 1
-    return count
-
+    if platform.system() == "Linux":
+        try:
+            result = subprocess.run("fortune | cowsay", shell=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
+            if result.returncode == 0:
+                return result.stdout
+        except:
+            pass
+    return "The only way to do great work is to love what you do. - Steve Jobs"
 
 def get_banner():
-    ascii_banner = pyfiglet.figlet_format("Test Action", font="slant")
-    return ascii_banner
-
+    return pyfiglet.figlet_format("Test Action", font="slant")
 
 class ReportMemoryProcess(multiprocessing.Process):
-    def __init__(self, queue, count, interval):
+    def __init__(self, queue, count, interval, stop_event):
         super().__init__()
         self.queue = queue
         self.count = count
         self.interval = interval
+        self.stop_event = stop_event
 
     def run(self):
         for i in range(self.count):
+            if self.stop_event.is_set():
+                break
             time.sleep(self.interval)
-            x = random.random() * 100
-            # x = psutil.virtual_memory().total
-            self.queue.put((i, x))
+            # Simulate memory usage
+            val = 50 + (random.random() - 0.5) * 20 + (i / self.count) * 30
+            self.queue.put((i, val))
         self.queue.put("done")
-
 
 class MainWindow:
     def __init__(self):
         self.queue = multiprocessing.Queue()
+        self.stop_event = multiprocessing.Event()
+        self.test_cases = [] # List of tags
+        self.is_running = False
+        self.monitor_thread = None
 
     def create(self):
+        self.setup_theme()
         self.create_mainwindow()
         self.create_file_window()
 
-    def create_mainwindow(self):
-        datax = []
-        datay = []
-        for i in range(20):
-            x = random.random() * 100
-            datax.append(i)
-            datay.append(x)
+    def setup_theme(self):
+        with dpg.theme() as global_theme:
+            with dpg.theme_component(dpg.mvAll):
+                dpg.add_theme_color(dpg.mvThemeCol_WindowBg, (30, 30, 30, 255))
+                dpg.add_theme_color(dpg.mvThemeCol_TitleBgActive, (50, 50, 200, 255))
+                dpg.add_theme_color(dpg.mvThemeCol_CheckMark, (100, 150, 255, 255))
+                dpg.add_theme_color(dpg.mvThemeCol_Button, (60, 60, 60, 255))
+                dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, (80, 80, 200, 255))
+                dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 5)
+                dpg.add_theme_style(dpg.mvStyleVar_WindowRounding, 8)
+        dpg.bind_theme(global_theme)
 
-        with dpg.window(label="Unit Test", tag="main_window"):
+    def create_mainwindow(self):
+        with dpg.window(label="Test Action Dashboard", tag="main_window"):
             with dpg.menu_bar():
-                with dpg.menu(label="File"):
-                    dpg.add_menu_item(label="demo", callback=demo.show_demo)
-                    dpg.add_menu_item(label="registry", callback=dpg.show_item_registry)
-                    dpg.add_menu_item(label="tool", callback=dpg.show_tool)
-                    dpg.add_menu_item(label="implot", callback=dpg.show_implot_demo)
-                    dpg.add_menu_item(label="doc", callback=dpg.show_documentation)
-                    dpg.add_menu_item(label="Debug", callback=dpg.show_debug)
-                    dpg.add_menu_item(label="metrics", callback=dpg.show_metrics)
+                with dpg.menu(label="Tools"):
+                    dpg.add_menu_item(label="Show Demo", callback=demo.show_demo)
+                    dpg.add_menu_item(label="Item Registry", callback=dpg.show_item_registry)
+                    dpg.add_menu_item(label="Metrics", callback=dpg.show_metrics)
+                with dpg.menu(label="Help"):
                     dpg.add_menu_item(label="About", callback=dpg.show_about)
 
             with dpg.group(horizontal=True):
-                banner = get_banner()
-                dpg.add_text(banner)
-                dpg.add_separator()
-
-                if platform.system() == "Linux":
-                    quote = get_quote()
-                    dpg.add_text(quote, tag="quote_text")
-
-            with dpg.group(horizontal=True):
-                dpg.add_text("Build Type:")
-                dpg.add_radio_button(
-                    label="Build", items=["Debug", "Release"], horizontal=True
-                )
-
-            dpg.add_separator()
-            with dpg.child_window(height=200):
-                dpg.add_text("Test cases")
-                with dpg.table(header_row=False):
-                    dpg.add_table_column()
-                    dpg.add_table_column()
-                    dpg.add_table_column()
-                    with dpg.table_row():
-                        dpg.add_checkbox(label="case 1", tag="t1", default_value=True)
-                        dpg.add_checkbox(label="case 2", tag="t2")
-                        dpg.add_checkbox(label="case 3", tag="t3")
-
-                    with dpg.table_row():
-                        dpg.add_checkbox(label="case 4", tag="t4")
-                        dpg.add_checkbox(label="case 5", tag="t5")
-
-                    for i in range(30):
-                        with dpg.table_row():
-                            dpg.add_checkbox(label=f"case {i+6}")
-
-            dpg.add_separator()
-            with dpg.group(horizontal=True):
-                dpg.add_button(label="Select All", callback=self.select_all_callback)
-                dpg.add_button(label="Select None", callback=self.select_none_callback)
-                dpg.add_button(label="registery", callback=dpg.show_item_registry)
-
+                with dpg.group():
+                    dpg.add_text(get_banner(), color=(100, 200, 255))
+                    self.quote_text = dpg.add_text(get_quote(), wrap=600)
+                
+            dpg.add_spacer(height=10)
             dpg.add_separator()
 
-            with dpg.group():
-                dpg.add_drag_int(
-                    label="count", default_value=100, max_value=1000, tag="count"
-                )
-                dpg.add_input_float(label="interval", default_value=0.1, tag="interval")
-
-                with dpg.tooltip("interval"):
-                    dpg.add_text("sleep time")
-
-            dpg.add_spacer()
-
             with dpg.group(horizontal=True):
-                dpg.add_drag_int(
-                    label="Repeat", default_value=1, width=200, min_value=1
-                )
-                dpg.add_button(
-                    label="Run", width=100, tag="run_button", callback=self.run_callback
-                )
-                dpg.add_loading_indicator(tag="ind", show=False)
-                dpg.add_button(label="browse...", callback=self.browse_callback)
+                with dpg.child_window(width=300, height=450, label="Configuration", border=True):
+                    dpg.add_text("Build Configuration", color=(255, 200, 100))
+                    dpg.add_radio_button(["Debug", "Release"], horizontal=True, default_value="Debug", tag="build_type")
+                    
+                    dpg.add_spacer(height=10)
+                    dpg.add_text("Execution Settings", color=(255, 200, 100))
+                    dpg.add_drag_int(label="Data Points", default_value=100, min_value=10, max_value=1000, tag="count", width=150)
+                    dpg.add_input_float(label="Interval (s)", default_value=0.05, min_value=0.01, tag="interval", width=150)
+                    dpg.add_drag_int(label="Repeat Count", default_value=1, min_value=1, max_value=10, tag="repeat", width=150)
+                    
+                    dpg.add_spacer(height=20)
+                    with dpg.group(horizontal=True):
+                        dpg.add_button(label="RUN TESTS", width=120, height=40, tag="run_button", callback=self.run_callback)
+                        dpg.add_button(label="STOP", width=80, height=40, tag="stop_button", callback=self.stop_callback, enabled=False)
+                    
+                    dpg.add_spacer(height=10)
+                    dpg.add_loading_indicator(tag="ind", show=False, radius=2, color=(100, 150, 255))
+                    dpg.add_text("Status: Idle", tag="run_status")
+                    dpg.add_progress_bar(label="Progress", width=-1, tag="progress")
 
-            with dpg.window(label="Test cases", modal=True, show=False, tag="modal_id"):
-                dpg.add_text("No test cases selected")
-                dpg.add_separator()
-                dpg.add_button(
-                    label="Close",
-                    callback=lambda: dpg.configure_item("modal_id", show=False),
-                )
+                with dpg.child_window(label="Test Case Selection", border=True):
+                    dpg.add_text("Available Test Cases", color=(255, 200, 100))
+                    with dpg.group(horizontal=True):
+                        dpg.add_button(label="Select All", callback=self.select_all_callback, small=True)
+                        dpg.add_button(label="Deselect All", callback=self.select_none_callback, small=True)
+                    
+                    dpg.add_spacer(height=5)
+                    with dpg.child_window(height=300, border=False):
+                        with dpg.table(header_row=False, policy=dpg.mvTable_SizingFixedFit):
+                            dpg.add_table_column()
+                            dpg.add_table_column()
+                            dpg.add_table_column()
+                            
+                            for i in range(24):
+                                if i % 3 == 0:
+                                    row = dpg.add_table_row()
+                                tag = f"tc_{i+1}"
+                                self.test_cases.append(tag)
+                                dpg.add_checkbox(label=f"TC-{i+1:02d}", tag=tag, parent=row)
 
-            dpg.add_progress_bar(label="Progress", width=-1, tag="progress")
+                    dpg.add_spacer(height=10)
+                    dpg.add_button(label="Browse Workspace...", callback=self.browse_callback)
 
-            dpg.add_separator()
-            with dpg.group(horizontal=True):
-                dpg.add_text("Status")
-                dpg.add_text("Not started", tag="run_status")
-
+            dpg.add_spacer(height=10)
+            
             with dpg.tab_bar():
-                with dpg.tab(label="Memory Plot"):
-                    with dpg.plot(label="Memory", height=-1, width=-1, tag="plot"):
+                with dpg.tab(label="System Monitor"):
+                    with dpg.plot(label="Resource Usage Simulation", height=-1, width=-1, tag="plot"):
                         dpg.add_plot_legend()
-                        dpg.add_plot_axis(dpg.mvXAxis, label="Time(seconds)")
-                        dpg.add_plot_axis(dpg.mvYAxis, label="vss", tag="y_axis")
-                        dpg.set_axis_limits_auto("y_axis")
-                        dpg.fit_axis_data("y_axis")
-                        dpg.add_line_series(
-                            datax, datay, label="VSS", parent="y_axis", tag="mem"
-                        )
-
-                with dpg.tab(label="Test summary"):
-                    dpg.add_text("Test Summary", tag="test_summary")
-
-                with dpg.tab(label="Test XML"):
-                    dpg.add_text("This is test xml report", tag="test_xml")
-
-                with dpg.tab(label="Valgrind log"):
-                    dpg.add_text("This is valgrind log", tag="test_valgrind")
+                        dpg.add_plot_axis(dpg.mvXAxis, label="Sequence")
+                        y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Value", tag="y_axis")
+                        dpg.add_line_series([], [], label="Metric Alpha", parent="y_axis", tag="mem_series")
+                
+                with dpg.tab(label="Analysis"):
+                    with dpg.group(horizontal=True):
+                        dpg.add_button(label="Generate Fake Report", callback=self.update_analysis_tabs)
+                    dpg.add_separator()
+                    with dpg.tab_bar():
+                        with dpg.tab(label="Summary"):
+                            dpg.add_text("", tag="test_summary", wrap=800)
+                        with dpg.tab(label="XML Output"):
+                            dpg.add_input_text(multiline=True, readonly=True, width=-1, height=-1, tag="test_xml")
+                        with dpg.tab(label="Logs"):
+                            dpg.add_input_text(multiline=True, readonly=True, width=-1, height=-1, tag="test_logs")
 
     def run_callback(self, sender):
-        if get_checked_tc_count() == 0:
-            dpg.configure_item("modal_id", show=True)
+        selected_count = sum([dpg.get_value(tc) for tc in self.test_cases])
+        if selected_count == 0:
+            self.show_error("Please select at least one test case.")
             return
 
-        self.update_quote()
-        self.update_ui_before_run()
-        self.start_simulate_process()
-        self.start_monitor_thread()
-
-    def update_quote(self):
-        if platform.system() == "Linux":
-            quote = get_quote()
-            dpg.set_value("quote_text", quote)
-
-    def update_ui_before_run(self):
+        self.is_running = True
+        self.stop_event.clear()
+        
+        # UI Updates
         dpg.configure_item("run_button", enabled=False)
+        dpg.configure_item("stop_button", enabled=True)
         dpg.configure_item("ind", show=True)
-        dpg.set_value("mem", [[], []])
+        dpg.set_value("run_status", "Running...")
         dpg.configure_item("run_status", color=(255, 255, 0))
-        dpg.set_value("run_status", "Started")
+        dpg.set_value("mem_series", [[], []])
+        dpg.set_value("progress", 0.0)
 
-    def start_simulate_process(self):
+        # Start process
         count = dpg.get_value("count")
         interval = dpg.get_value("interval")
-        proc = ReportMemoryProcess(self.queue, count, interval)
+        proc = ReportMemoryProcess(self.queue, count, interval, self.stop_event)
         proc.start()
 
-    def start_monitor_thread(self):
-        monitor_thread = threading.Thread(target=self.my_monitor_mem)
-        monitor_thread.start()
+        # Start monitor
+        self.monitor_thread = threading.Thread(target=self.monitor_logic, args=(count,), daemon=True)
+        self.monitor_thread.start()
 
-    def select_all_callback(self, sender):
-        ts_tags = ("t1", "t2", "t3", "t4", "t5")
-        for ts in ts_tags:
-            dpg.set_value(ts, True)
+    def stop_callback(self, sender):
+        self.stop_event.set()
+        dpg.set_value("run_status", "Stopping...")
 
-    def select_none_callback(self, sender):
-        ts_tags = ("t1", "t2", "t3", "t4", "t5")
-        for ts in ts_tags:
-            dpg.set_value(ts, False)
-
-    def my_monitor_mem(self):
-        datax = []
-        datay = []
-        p = 0
-        dpg.set_value("progress", p)
+    def monitor_logic(self, total_count):
+        data_x, data_y = [], []
         while True:
-            x = self.queue.get()
-            if x == "done":
-                print("done")
-                break
-            datax.append(x[0])
-            datay.append(x[1])
-            dpg.set_value("mem", [datax, datay])
-            p += 0.1
-            dpg.set_value("progress", p)
-        self.update_ui_after_run()
+            try:
+                msg = self.queue.get(timeout=0.1)
+                if msg == "done":
+                    break
+                
+                idx, val = msg
+                data_x.append(idx)
+                data_y.append(val)
+                
+                # Update UI periodically to save overhead
+                if len(data_x) % 5 == 0 or idx == total_count - 1:
+                    dpg.set_value("mem_series", [data_x, data_y])
+                    dpg.set_value("progress", (idx + 1) / total_count)
+            except:
+                if self.stop_event.is_set() and self.queue.empty():
+                    break
+                continue
 
-    def update_ui_after_run(self):
-        self.update_run_status()
-        dpg.set_value("test_summary", get_fake_markdown())
-        dpg.set_value("test_xml", get_fake_text())
-        dpg.set_value("test_valgrind", get_fake_text())
-        dpg.configure_item("ind", show=False)
+        self.finalize_run()
+
+    def finalize_run(self):
+        self.is_running = False
         dpg.configure_item("run_button", enabled=True)
-
-    def update_run_status(self):
-        x = random.random()
-        if x > 0.5:
-            color = (0, 255, 0)
-            text = "Sucess"
+        dpg.configure_item("stop_button", enabled=False)
+        dpg.configure_item("ind", show=False)
+        
+        if self.stop_event.is_set():
+            dpg.set_value("run_status", "Cancelled")
+            dpg.configure_item("run_status", color=(255, 100, 100))
         else:
-            color = (255, 0, 0)
-            text = "Failed"
-        dpg.configure_item("run_status", color=color)
-        dpg.set_value("run_status", text)
+            success = random.random() > 0.2
+            status_text = "Success" if success else "Failed"
+            status_color = (100, 255, 100) if success else (255, 100, 100)
+            dpg.set_value("run_status", status_text)
+            dpg.configure_item("run_status", color=status_color)
+            self.update_analysis_tabs()
+
+    def update_analysis_tabs(self):
+        dpg.set_value("test_summary", fake.post(size="medium"))
+        dpg.set_value("test_xml", f"<testsuite name='TestAction' tests='{len(self.test_cases)}'>\n  <testcase name='Simulation' time='1.2'/>\n</testsuite>")
+        dpg.set_value("test_logs", f"[INFO] Starting simulation...\n[DEBUG] Interval: {dpg.get_value('interval')}\n[INFO] Data points: {len(self.test_cases)}\n[SUCCESS] Completed.")
+
+    def select_all_callback(self):
+        for tc in self.test_cases:
+            dpg.set_value(tc, True)
+
+    def select_none_callback(self):
+        for tc in self.test_cases:
+            dpg.set_value(tc, False)
+
+    def show_error(self, message):
+        with dpg.window(label="Error", modal=True, tag="error_modal"):
+            dpg.add_text(message)
+            dpg.add_button(label="OK", width=75, callback=lambda: dpg.delete_item("error_modal"))
 
     def create_file_window(self):
-        with dpg.file_dialog(
-            directory_selector=False,
-            tag="file_window",
-            show=False,
-            callback=self.file_callback,
-        ):
-            dpg.add_file_extension("*.cpp", color=(255, 255, 0, 255))
-            dpg.add_file_extension("*.h", color=(255, 0, 255, 255))
+        with dpg.file_dialog(directory_selector=True, tag="file_window", show=False, callback=lambda s, a: print(f"Selected: {a}")):
+            dpg.add_file_extension(".*")
 
     def browse_callback(self):
         dpg.show_item("file_window")
-
-    def file_callback(self, app_data):
-        print(app_data)
-
 
 class App:
     def __init__(self):
@@ -290,10 +261,8 @@ class App:
 
     def run(self):
         self.main_window.create()
-        dpg.configure_item("run_status", **{"color": (0, 255, 0)})
-        dpg.create_viewport(title="Test Radio", width=700, height=800)
+        dpg.create_viewport(title="Test Action Pro", width=1000, height=800)
         dpg.set_primary_window("main_window", True)
-
         dpg.setup_dearpygui()
         dpg.show_viewport()
         dpg.start_dearpygui()
@@ -301,11 +270,8 @@ class App:
     def __del__(self):
         dpg.destroy_context()
 
-
-def main():
+if __name__ == "__main__":
+    # On Windows, multiprocessing needs this
+    multiprocessing.freeze_support()
     app = App()
     app.run()
-
-
-if __name__ == "__main__":
-    main()
